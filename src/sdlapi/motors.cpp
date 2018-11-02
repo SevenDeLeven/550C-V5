@@ -1,9 +1,15 @@
-#include "sdlapi/motors.h"
+#include "sdlapi/motors.hpp"
 
 using namespace sdl;
 
 motorgroup::motorgroup() {
+  this->motors = std::vector<pros::Motor>();
+  this->reversed = false;
+}
 
+motorgroup::motorgroup(const bool reversed) {
+  this->motors = std::vector<pros::Motor>();
+  this->reversed = reversed;
 }
 
 motorgroup::~motorgroup() {
