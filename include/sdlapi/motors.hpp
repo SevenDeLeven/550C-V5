@@ -26,13 +26,14 @@ public:
 
   virtual ~motorgroup();
 
+
   /**
   * Adds a motor to the group
   *
   * \param motor
   *   The motor to add to the list
   */
-  void add_motor(const pros::Motor& motor);
+  void add_motor(pros::Motor* motor);
   /**
   *
   * \param motorport
