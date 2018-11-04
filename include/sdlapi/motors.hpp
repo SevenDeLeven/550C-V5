@@ -12,9 +12,19 @@ private:
   bool reversed;
 public:
   /**
-  * Default constructor
+  * Constructor for motorgroup
   *
-  * Starts with an empty motor list and a false reversed state
+  * Designed to be a multi-motor control system which looks identical to the pros::Motor class
+  *
+  * \param reversed
+  *   Whether or not this group should be reversed. This does not set the motors' reversed flags, but
+  *     instead stores the boolean and changes the direction accordingly
+  *
+  * \param gearset
+  *   The initial gearset of the motors. This does set the gearset of all motors in the motorgroup
+  *
+  * \param units
+  *   The encoder units to have each motor set to use. This does set the units flag of all motors in the motorgroup
   */
   motorgroup();
 
@@ -53,7 +63,7 @@ public:
   * \note Use this for joystick controlls
   *
   * \param speed
-  *   The speed (from -127 to 127) to set the motors to. This is primative way of setting the speed of motors
+  *   The speed (from -127 to 127) to set the motors to. This is the primative way of setting the speed of motors
   */
   void move(const std::int32_t speed);
   /**
@@ -101,7 +111,7 @@ public:
   *
   * \note Does not set reversed key of motors in group
   * \note Be careful with reversing and using moveAbsolute, as doing so would cause the motor to move to the opposite
-  *                     side of encoder value (e.g. moveAbsolute to +1000, then reversing would set it to -1000)
+  *         side of encoder value (e.g. moveAbsolute to +1000, then reversing would set it to -1000)
   */
   void set_reversed(const bool reversed);
   /**
@@ -109,7 +119,7 @@ public:
   *
   * \note Does not set reversed key of motors in group
   * \note Be careful with reversing and using moveAbsolute, as doing so would cause the motor to move to the opposite
-  *                     side of encoder value (e.g. moveAbsolute to +1000, then reversing would set it to -1000)
+  *         side of encoder value (e.g. moveAbsolute to +1000, then reversing would set it to -1000)
   */
   void reverse();
   /**
@@ -157,19 +167,27 @@ public:
   */
   std::int32_t get_actual_velocity();
   /**
-  * Gets the average torque of all the motors combined
+  * Gets the total torque of all the motors combined
   *
   * \returns
-  *   The average torque provided by all motors
+  *   The total torque provided by all motors in the group
   */
   std::int32_t get_torque();
   /**
   * Gets the current being drawn from all motors
   *
   * \returns
-  *   The average current provided by all motors
+  *   The total current provided by all motors in the group
   */
   std::int32_t get_current_draw();
+
+  /**
+  * Gets the average position of all the motors combined
+  *
+  * \returns
+  *   The average position of all motors in the group
+  */
+  double get_position();
 };
 
 }

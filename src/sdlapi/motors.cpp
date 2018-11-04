@@ -92,3 +92,37 @@ void motorgroup::set_gearing(const pros::motor_gearset_e_t gearset) {
     this->motors[i].set_gearing(gearset);
   }
 }
+
+std::int32_t motorgroup::get_actual_velocity() {
+  std::int32_t ret;
+  for (int i = 0; i < this->motors.size(); i++) {
+    ret += motors[i].get_actual_velocity();
+  }
+  ret /= this->motors.size();
+  return ret;
+}
+
+std::int32_t motorgroup::get_current_draw() {
+  std::int32_t ret = 0;
+  for (int i = 0; i < this->motors.size(); i++) {
+    ret += this->motors[i].get_current_draw();
+  }
+  return ret;
+}
+
+std::int32_t motorgroup::get_torque() {
+  std::int32_t ret = 0;
+  for (int i = 0; i < this->motors.size(); i++) {
+    ret += this->motors[i].get_torque();
+  }
+  return ret;
+}
+
+double motorgroup::get_position() {
+  double ret = 0;
+  for (int i = 0; i < this->motors.size(); i++) {
+    ret += this->motors[i].get_position();
+  }
+  ret /= this->motors.size();
+  return ret;
+}

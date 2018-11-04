@@ -47,7 +47,7 @@ void opcontrol() {
 		int right = master.get_analog(ANALOG_LEFT_Y) - master.get_analog(ANALOG_LEFT_X);
 		int intakeSpeed = (((int)master.get_digital(DIGITAL_L1)) - ((int)master.get_digital(DIGITAL_L2))) * 127;
 		int flyWheelSpeed = flyWheelToggle * -127;
-
+		
 		flyWheel.move(flyWheelSpeed);
 		intake.move(intakeSpeed);
 		leftDrive.move(left);
