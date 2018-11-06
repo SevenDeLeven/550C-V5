@@ -20,8 +20,8 @@ void opcontrol() {
 	pros::Motor leftSide2(2);
 	pros::Motor rightSide1(8);
 	pros::Motor rightSide2(9);
-	pros::Motor flyWheel(7);
-	pros::Motor intake(6);
+	pros::Motor flyWheel(6);
+	pros::Motor intake(7);
 	leftSide1.set_reversed(false);
 	leftSide2.set_reversed(false);
 	rightSide1.set_reversed(false);
@@ -32,28 +32,38 @@ void opcontrol() {
 	sdl::motorgroup rightDrive;
 	rightDrive.add_motor(&rightSide1);
 	rightDrive.add_motor(&rightSide2);
+	rightDrive.set_reversed(true);
 
 	bool flyWheelToggle = false;
 	bool flyWheelPressed = false;
+	int inversed = 1;
+	bool directionPressed = false;
 
 	while (true) {
 
 		bool flyWheelCurPressed = master.get_digital(DIGITAL_X);
+		bool directionCurPressed = master.get_digital(DIGITAL_B);
+
 		if (flyWheelCurPressed && !flyWheelPressed) {
 			flyWheelToggle = !flyWheelToggle;
 		}
 
-		int left = master.get_analog(ANALOG_LEFT_Y) + master.get_analog(ANALOG_LEFT_X);
-		int right = master.get_analog(ANALOG_LEFT_Y) - master.get_analog(ANALOG_LEFT_X);
+		if (directionCurPressed && !directionPressed) {
+			inversed *= -1;
+		}
+
+		int left = (master.get_analog(ANALOG_LEFT_Y) * inversed) + master.get_analog(ANALOG_LEFT_X);
+		int right = (master.get_analog(ANALOG_LEFT_Y) * inversed) - master.get_analog(ANALOG_LEFT_X);
 		int intakeSpeed = (((int)master.get_digital(DIGITAL_L1)) - ((int)master.get_digital(DIGITAL_L2))) * 127;
 		int flyWheelSpeed = flyWheelToggle * -127;
-		
+
 		flyWheel.move(flyWheelSpeed);
 		intake.move(intakeSpeed);
 		leftDrive.move(left);
 		rightDrive.move(right);
 
 		flyWheelPressed = flyWheelCurPressed;
+		directionPressed = directionCurPressed;
 		pros::delay(20);
 	}
 }

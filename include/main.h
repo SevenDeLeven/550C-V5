@@ -62,6 +62,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "vars.h"
+
 void autonomous(void);
 void initialize(void);
 void disabled(void);
