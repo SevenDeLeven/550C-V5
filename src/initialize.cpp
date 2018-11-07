@@ -10,9 +10,7 @@
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	autonType = 0;
-	autonSide = 0;
-	autonTeam = 0;
+	flyWheel.set_reversed(true);
 }
 
 /**
@@ -21,7 +19,7 @@ void initialize() {
  * the robot is enabled, this task will exit.
  */
 void disabled() {
-
+	competition_initialize();
 }
 
 /**

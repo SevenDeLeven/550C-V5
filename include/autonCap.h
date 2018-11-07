@@ -1,0 +1,12 @@
+// setSecondsPerTile(3.0);
+intake = -127;
+go(-2.0);
+intake = 0;
+go(1.0);
+turnDegrees(-90*direction);
+go(-1.0);
+turnDegrees(90*direction);
+intake = 127;
+go(-1.0);
+intake = 0;
+go(1.0);

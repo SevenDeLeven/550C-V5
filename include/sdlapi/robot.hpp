@@ -6,8 +6,8 @@ namespace sdl {
 
 class Robot {
 private:
-  motorgroup leftDrive;
-  motorgroup rightDrive;
+  motorgroup* m_leftDrive;
+  motorgroup* m_rightDrive;
   double ticksPerTile;
   double ticksPerRevolution;
 public:
@@ -20,6 +20,7 @@ public:
   void go(double tiles);
   void go(double tiles, double maxVel);
   void goConstVel(double tiles, double vel);
+  void goTime(double vel, double time);
   void turnDegrees(double degrees);
   void turnDegrees(double degrees, double maxVel);
 

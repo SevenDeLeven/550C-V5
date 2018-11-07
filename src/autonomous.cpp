@@ -1,6 +1,6 @@
 #include "main.h"
 #include "sdlapi/motors.hpp"
-#include "sdlapi/robot.hpp"
+#include "sdlapi/timer.hpp"
 
 /**
  * Runs the user autonomous code. This function will be started in its own task
@@ -14,20 +14,200 @@
  * from where it left off.
  */
 
-pros::Motor leftSide1(1);
-pros::Motor leftSide2(2);
-pros::Motor flyWheel(6);
-pros::Motor intake(7);
-pros::Motor rightSide1(9);
-pros::Motor rightSide2(10);
+double ticksPerTile = 650*(900.0/392.0);
+double ticksPerRevolution = 1390*(900.0/392.0);
+
+ sdl::motorgroup leftDrive;
+ sdl::motorgroup rightDrive;
+
+ void go(double tiles, double maxVel) {
+   double distance = tiles*ticksPerTile;
+   sdl::Timer timer;
+   leftDrive.reset_position();
+   rightDrive.reset_position();
+ 	int direction = 1;
+   if (distance < 0) {
+   	direction *= -1;
+   	distance = abs(distance);
+   }
+
+ 	bool clearedTimer = false;
+ 	while (true) {
+ 		double leftDistance = abs(leftDrive.get_position());
+ 		double rightDistance = abs(rightDrive.get_position());
+ 		double leftDifference = distance-leftDistance;
+ 		double rightDifference = distance-rightDistance;
+ 		std::int32_t leftSpeed = (maxVel) * (leftDifference < 800 ? (leftDifference/800.0) : 1);
+ 		std::int32_t rightSpeed = (maxVel) * (rightDifference < 800 ? (rightDifference/800.0) : 1);
+    // if (leftSpeed != 0 && abs(leftSpeed) < 8) {
+    //  leftSpeed = abs(leftSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : leftSpeed;
+    // }
+    // if (rightSpeed != 0) {
+    //   rightSpeed = abs(rightSpeed) < 5 ? (rightSpeed < 0 ? -5 : 5) : rightSpeed;
+    // }
+ 		leftDrive.move_velocity(leftSpeed*direction);
+ 		rightDrive.move_velocity(rightSpeed*direction);
+ 		if (clearedTimer && !((abs(leftDifference) <= 10 && abs(rightDifference) <= 10))) {
+ 			clearedTimer = false;
+ 		}
+ 		if ((clearedTimer && timer.getTime() >= 100)) {
+ 			leftDrive.move(0);
+       rightDrive.move(0);
+ 			return;
+ 		}
+ 		if ((abs(leftDifference) <= 10 && abs(rightDifference) <= 10 && !clearedTimer)) {
+ 			clearedTimer = true;
+ 			timer.reset();
+ 		}
+ 	}
+ }
+ void go(double tiles) {
+   go(tiles, 200);
+ }
+ void goConstVel(double tiles, double vel) {
+   double distance = tiles*ticksPerTile;
+   leftDrive.reset_position();
+   rightDrive.reset_position();
+ 	int direction = 1;
+   if (distance < 0) {
+   	direction *= -1;
+   	distance = abs(distance);
+   }
+ 	while (true) {
+ 		double leftDistance = abs(leftDrive.get_position());
+ 		double rightDistance = abs(rightDrive.get_position());
+ 		double leftDifference = distance-leftDistance;
+ 		double rightDifference = distance-rightDistance;
+ 		leftDrive.move_velocity(vel*direction);
+ 		rightDrive.move_velocity(vel*direction);
+ 		if ((abs(leftDifference) <= 10 && abs(rightDifference) <= 10)) {
+       leftDrive.move(0);
+       rightDrive.move(0);
+ 			return;
+ 		}
+ 	}
+ }
+
+ void goTime(double time, double vel) {
+   leftDrive.move(vel);
+   rightDrive.move(vel);
+   pros::delay(time*1000);
+   leftDrive.move(0);
+   rightDrive.move(0);
+ }
+
+ void turnDegrees(double degrees) {
+   double distance = (degrees/360.0)*ticksPerRevolution;
+   sdl::Timer timer;
+   leftDrive.reset_position();
+   rightDrive.reset_position();
+ 	int direction = 1;
+   if (distance < 0) {
+   	direction *= -1;
+   	distance = abs(distance);
+   }
+
+ 	bool clearedTimer = false;
+ 	while (true) {
+ 		double leftDistance = abs(leftDrive.get_position());
+ 		double rightDistance = abs(rightDrive.get_position());
+ 		double leftDifference = distance-leftDistance;
+ 		double rightDifference = distance-rightDistance;
+ 		std::int32_t leftSpeed = (200) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
+ 		std::int32_t rightSpeed = (200) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
+     leftSpeed = abs(leftSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : leftSpeed;
+     rightSpeed = abs(rightSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : rightSpeed;
+ 		if (leftDistance != 0 && rightDistance != 0) {
+ 			leftSpeed *= ((float)rightDistance)/((float)leftDistance);
+ 			rightSpeed *= ((float)leftDistance)/((float)rightDistance);
+ 		}
+ 		leftDrive.move_velocity(leftSpeed*direction);
+ 		rightDrive.move_velocity(rightSpeed*direction*-1);
+ 		if (clearedTimer && !((abs(leftDifference) <= 10 && abs(rightDifference) <= 10))) {
+ 			clearedTimer = false;
+ 		}
+ 		if ((clearedTimer && timer.getTime() >= 100)) {
+ 			leftDrive.move(0);
+       rightDrive.move(0);
+ 			return;
+ 		}
+ 		if ((abs(leftDifference) <= 10 && abs(rightDifference) <= 10 && !clearedTimer)) {
+ 			clearedTimer = true;
+ 			timer.reset();
+ 		}
+ 	}
+ }
+
+ void turnDegrees(double degrees, double maxVel) {
+   double distance = (degrees/360.0)*ticksPerRevolution;
+   sdl::Timer timer;
+   leftDrive.reset_position();
+   rightDrive.reset_position();
+ 	int direction = 1;
+   if (distance < 0) {
+   	direction *= -1;
+   	distance = abs(distance);
+   }
+
+ 	bool clearedTimer = false;
+ 	while (true) {
+ 		double leftDistance = abs(leftDrive.get_position());
+ 		double rightDistance = abs(rightDrive.get_position());
+ 		double leftDifference = distance-leftDistance;
+ 		double rightDifference = distance-rightDistance;
+ 		std::int32_t leftSpeed = (maxVel) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
+ 		std::int32_t rightSpeed = (maxVel) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
+     leftSpeed = abs(leftSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : leftSpeed;
+     rightSpeed = abs(rightSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : rightSpeed;
+ 		leftDrive.move_velocity(leftSpeed*direction);
+ 		rightDrive.move_velocity(rightSpeed*direction*-1);
+ 		if (clearedTimer && !((abs(leftDifference) <= 10 && abs(rightDifference) <= 10))) {
+ 			clearedTimer = false;
+ 		}
+ 		if ((clearedTimer && timer.getTime() >= 100)) {
+ 			leftDrive.move(0);
+       rightDrive.move(0);
+ 			return;
+ 		}
+ 		if ((abs(leftDifference) <= 10 && abs(rightDifference) <= 10 && !clearedTimer)) {
+ 			clearedTimer = true;
+ 			timer.reset();
+ 		}
+ 	}
+ }
 
 void autonomous() {
-  sdl::Robot robot;
-  sdl::motorgroup leftDrive = *robot.getLeftDrive();
-  sdl::motorgroup rightDrive = *robot.getRightDrive();
+  // pros::motor_pid_s_t velPid = pros::Motor::convert_pid(10,10,10,10);
+  // leftSide1.set_vel_pid(velPid);
+  // leftSide2.set_vel_pid(velPid);
+  // rightSide1.set_vel_pid(velPid);
+  // rightSide2.set_vel_pid(velPid);
   leftDrive.add_motor(&leftSide1);
   leftDrive.add_motor(&leftSide2);
   rightDrive.add_motor(&rightSide1);
   rightDrive.add_motor(&rightSide2);
-  
+  leftDrive.set_reversed(true);
+  if (autonType == AUTON_MATCH) {
+    if (autonSide == SIDE_CAP) {
+      auton_cap();
+    } else if (autonSide == SIDE_FLAG) {
+      auton_flag();
+    }
+  } else if (autonType == AUTON_SKILLS) {
+    auton_skills();
+  }
+}
+
+void auton_skills() {
+  #include "autonSkills.h"
+}
+
+void auton_flag() {
+  int direction = autonTeam == TEAM_BLUE ? 1 : -1;
+  #include "autonFlag.h"
+}
+
+void auton_cap() {
+  int direction = autonTeam == TEAM_BLUE ? 1 : -1;
+  #include "autonCap.h"
 }

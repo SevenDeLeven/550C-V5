@@ -16,12 +16,6 @@
  */
 void opcontrol() {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::Motor leftSide1(1);
-	pros::Motor leftSide2(2);
-	pros::Motor rightSide1(8);
-	pros::Motor rightSide2(9);
-	pros::Motor flyWheel(6);
-	pros::Motor intake(7);
 	leftSide1.set_reversed(false);
 	leftSide2.set_reversed(false);
 	rightSide1.set_reversed(false);
@@ -42,7 +36,7 @@ void opcontrol() {
 	while (true) {
 
 		bool flyWheelCurPressed = master.get_digital(DIGITAL_X);
-		bool directionCurPressed = master.get_digital(DIGITAL_B);
+		bool directionCurPressed = master.get_digital(DIGITAL_UP);
 
 		if (flyWheelCurPressed && !flyWheelPressed) {
 			flyWheelToggle = !flyWheelToggle;
@@ -55,7 +49,7 @@ void opcontrol() {
 		int left = (master.get_analog(ANALOG_LEFT_Y) * inversed) + master.get_analog(ANALOG_LEFT_X);
 		int right = (master.get_analog(ANALOG_LEFT_Y) * inversed) - master.get_analog(ANALOG_LEFT_X);
 		int intakeSpeed = (((int)master.get_digital(DIGITAL_L1)) - ((int)master.get_digital(DIGITAL_L2))) * 127;
-		int flyWheelSpeed = flyWheelToggle * -127;
+		int flyWheelSpeed = flyWheelToggle * 127;
 
 		flyWheel.move(flyWheelSpeed);
 		intake.move(intakeSpeed);

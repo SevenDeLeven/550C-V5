@@ -1,10 +1,12 @@
+#include "main.h"
 #include "sdlapi/robot.hpp"
 #include "sdlapi/timer.hpp"
 #include "math.h"
 
 using namespace sdl;
 Robot::Robot() {
-
+  this->m_leftDrive = new motorgroup();
+  this->m_rightDrive = new motorgroup();
 }
 
 Robot::~Robot() {
@@ -20,7 +22,11 @@ void Robot::setTicksPerRevolution(double ticksPerRevolution) {
 }
 
 void Robot::go(double tiles) {
-  long distance = tiles*this->ticksPerTile;
+  motorgroup leftDrive = *this->m_leftDrive;
+  motorgroup rightDrive = *this->m_rightDrive;
+    leftDrive.move(127);
+    pros::delay(500);
+  double distance = tiles*this->ticksPerTile;
   Timer timer;
   leftDrive.reset_position();
   rightDrive.reset_position();
@@ -32,20 +38,18 @@ void Robot::go(double tiles) {
 
 	bool clearedTimer = false;
 	while (true) {
-		long leftDistance = abs(this->leftDrive.get_position());
-		long rightDistance = abs(this->rightDrive.get_position());
-		long leftDifference = distance-leftDistance;
-		long rightDifference = distance-rightDistance;
-		int leftSpeed = (200) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
-		int rightSpeed = (200) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
+		double leftDistance = abs(leftDrive.get_position());
+		double rightDistance = abs(rightDrive.get_position());
+		double leftDifference = distance-leftDistance;
+		double rightDifference = distance-rightDistance;
+		std::int32_t leftSpeed = (200) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
+		std::int32_t rightSpeed = (200) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
     leftSpeed = abs(leftSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : leftSpeed;
     rightSpeed = abs(rightSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : rightSpeed;
-		if (leftDistance != 0 && rightDistance != 0) {
-			leftSpeed *= ((float)rightDistance)/((float)leftDistance);
-			rightSpeed *= ((float)leftDistance)/((float)rightDistance);
-		}
-		leftDrive.move_velocity(leftSpeed*direction);
-		rightDrive.move_velocity(rightSpeed*direction);
+		// leftDrive.move(leftSpeed*direction > 127 ? 127 : leftSpeed*direction < -127 ? -127 : leftSpeed*direction);
+		// rightDrive.move(rightSpeed*direction > 127 ? 127 : rightSpeed*direction < -127 ? -127 : rightSpeed*direction);
+    leftDrive.move(127);
+    rightDrive.move(127);
 		if (clearedTimer && !((abs(leftDifference) <= 10 && abs(rightDifference) <= 10))) {
 			clearedTimer = false;
 		}
@@ -62,7 +66,9 @@ void Robot::go(double tiles) {
 }
 
 void Robot::go(double tiles, double maxVel) {
-  long distance = tiles*this->ticksPerTile;
+motorgroup leftDrive = *this->m_leftDrive;
+motorgroup rightDrive = *this->m_rightDrive;
+  double distance = tiles*this->ticksPerTile;
   Timer timer;
   leftDrive.reset_position();
   rightDrive.reset_position();
@@ -74,18 +80,14 @@ void Robot::go(double tiles, double maxVel) {
 
 	bool clearedTimer = false;
 	while (true) {
-		long leftDistance = abs(this->leftDrive.get_position());
-		long rightDistance = abs(this->rightDrive.get_position());
-		long leftDifference = distance-leftDistance;
-		long rightDifference = distance-rightDistance;
-		int leftSpeed = (maxVel) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
-		int rightSpeed = (maxVel) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
+		double leftDistance = abs(leftDrive.get_position());
+		double rightDistance = abs(rightDrive.get_position());
+		double leftDifference = distance-leftDistance;
+		double rightDifference = distance-rightDistance;
+		std::int32_t leftSpeed = (maxVel) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
+		std::int32_t rightSpeed = (maxVel) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
     leftSpeed = abs(leftSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : leftSpeed;
     rightSpeed = abs(rightSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : rightSpeed;
-		if (leftDistance != 0 && rightDistance != 0) {
-			leftSpeed *= ((float)rightDistance)/((float)leftDistance);
-			rightSpeed *= ((float)leftDistance)/((float)rightDistance);
-		}
 		leftDrive.move_velocity(leftSpeed*direction);
 		rightDrive.move_velocity(rightSpeed*direction);
 		if (clearedTimer && !((abs(leftDifference) <= 10 && abs(rightDifference) <= 10))) {
@@ -104,7 +106,9 @@ void Robot::go(double tiles, double maxVel) {
 }
 
 void Robot::goConstVel(double tiles, double vel) {
-  long distance = tiles*this->ticksPerTile;
+motorgroup leftDrive = *this->m_leftDrive;
+motorgroup rightDrive = *this->m_rightDrive;
+  double distance = tiles*this->ticksPerTile;
   leftDrive.reset_position();
   rightDrive.reset_position();
 	int direction = 1;
@@ -113,10 +117,10 @@ void Robot::goConstVel(double tiles, double vel) {
   	distance = abs(distance);
   }
 	while (true) {
-		long leftDistance = abs(this->leftDrive.get_position());
-		long rightDistance = abs(this->rightDrive.get_position());
-		long leftDifference = distance-leftDistance;
-		long rightDifference = distance-rightDistance;
+		double leftDistance = abs(leftDrive.get_position());
+		double rightDistance = abs(rightDrive.get_position());
+		double leftDifference = distance-leftDistance;
+		double rightDifference = distance-rightDistance;
 		leftDrive.move_velocity(vel*direction);
 		rightDrive.move_velocity(vel*direction);
 		if ((abs(leftDifference) <= 10 && abs(rightDifference) <= 10)) {
@@ -127,8 +131,20 @@ void Robot::goConstVel(double tiles, double vel) {
 	}
 }
 
+void Robot::goTime(double time, double vel) {
+motorgroup leftDrive = *this->m_leftDrive;
+motorgroup rightDrive = *this->m_rightDrive;
+  leftDrive.move(vel);
+  rightDrive.move(vel);
+  pros::delay(time*1000);
+  leftDrive.move(0);
+  rightDrive.move(0);
+}
+
 void Robot::turnDegrees(double degrees) {
-  long distance = (degrees/360.0)*this->ticksPerRevolution;
+motorgroup leftDrive = *this->m_leftDrive;
+motorgroup rightDrive = *this->m_rightDrive;
+  double distance = (degrees/360.0)*this->ticksPerRevolution;
   Timer timer;
   leftDrive.reset_position();
   rightDrive.reset_position();
@@ -140,12 +156,12 @@ void Robot::turnDegrees(double degrees) {
 
 	bool clearedTimer = false;
 	while (true) {
-		long leftDistance = abs(this->leftDrive.get_position());
-		long rightDistance = abs(this->rightDrive.get_position());
-		long leftDifference = distance-leftDistance;
-		long rightDifference = distance-rightDistance;
-		int leftSpeed = (200) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
-		int rightSpeed = (200) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
+		double leftDistance = abs(leftDrive.get_position());
+		double rightDistance = abs(rightDrive.get_position());
+		double leftDifference = distance-leftDistance;
+		double rightDifference = distance-rightDistance;
+		std::int32_t leftSpeed = (200) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
+		std::int32_t rightSpeed = (200) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
     leftSpeed = abs(leftSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : leftSpeed;
     rightSpeed = abs(rightSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : rightSpeed;
 		if (leftDistance != 0 && rightDistance != 0) {
@@ -170,7 +186,9 @@ void Robot::turnDegrees(double degrees) {
 }
 
 void Robot::turnDegrees(double degrees, double maxVel) {
-  long distance = (degrees/360.0)*this->ticksPerRevolution;
+motorgroup leftDrive = *this->m_leftDrive;
+motorgroup rightDrive = *this->m_rightDrive;
+  double distance = (degrees/360.0)*this->ticksPerRevolution;
   Timer timer;
   leftDrive.reset_position();
   rightDrive.reset_position();
@@ -182,18 +200,14 @@ void Robot::turnDegrees(double degrees, double maxVel) {
 
 	bool clearedTimer = false;
 	while (true) {
-		long leftDistance = abs(this->leftDrive.get_position());
-		long rightDistance = abs(this->rightDrive.get_position());
-		long leftDifference = distance-leftDistance;
-		long rightDifference = distance-rightDistance;
-		int leftSpeed = (maxVel) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
-		int rightSpeed = (maxVel) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
+		double leftDistance = abs(leftDrive.get_position());
+		double rightDistance = abs(rightDrive.get_position());
+		double leftDifference = distance-leftDistance;
+		double rightDifference = distance-rightDistance;
+		std::int32_t leftSpeed = (maxVel) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
+		std::int32_t rightSpeed = (maxVel) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
     leftSpeed = abs(leftSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : leftSpeed;
     rightSpeed = abs(rightSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : rightSpeed;
-		if (leftDistance != 0 && rightDistance != 0) {
-			leftSpeed *= ((float)rightDistance)/((float)leftDistance);
-			rightSpeed *= ((float)leftDistance)/((float)rightDistance);
-		}
 		leftDrive.move_velocity(leftSpeed*direction);
 		rightDrive.move_velocity(rightSpeed*direction*-1);
 		if (clearedTimer && !((abs(leftDifference) <= 10 && abs(rightDifference) <= 10))) {
@@ -213,9 +227,9 @@ void Robot::turnDegrees(double degrees, double maxVel) {
 
 
 motorgroup* Robot::getLeftDrive() {
-  return &this->leftDrive;
+  return this->m_leftDrive;
 }
 
 motorgroup* Robot::getRightDrive() {
-  return &this->rightDrive;
+  return this->m_rightDrive;
 }
