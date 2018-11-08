@@ -1,7 +1,8 @@
 #include "main.h"
 #include "sdlapi/motors.hpp"
 #include "sdlapi/timer.hpp"
-
+#define THRESHOLD 80
+#define MINVEL 18
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -14,8 +15,8 @@
  * from where it left off.
  */
 
-double ticksPerTile = 650*(900.0/392.0);
-double ticksPerRevolution = 1390*(900.0/392.0);
+double ticksPerTile = 720*(900.0/392.0);
+double ticksPerRevolution = 1470*(900.0/392.0);
 
  sdl::motorgroup leftDrive;
  sdl::motorgroup rightDrive;
@@ -25,7 +26,7 @@ double ticksPerRevolution = 1390*(900.0/392.0);
    sdl::Timer timer;
    leftDrive.reset_position();
    rightDrive.reset_position();
- 	int direction = 1;
+ 	 int direction = 1;
    if (distance < 0) {
    	direction *= -1;
    	distance = abs(distance);
@@ -39,15 +40,19 @@ double ticksPerRevolution = 1390*(900.0/392.0);
  		double rightDifference = distance-rightDistance;
  		std::int32_t leftSpeed = (maxVel) * (leftDifference < 800 ? (leftDifference/800.0) : 1);
  		std::int32_t rightSpeed = (maxVel) * (rightDifference < 800 ? (rightDifference/800.0) : 1);
-    // if (leftSpeed != 0 && abs(leftSpeed) < 8) {
-    //  leftSpeed = abs(leftSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : leftSpeed;
-    // }
-    // if (rightSpeed != 0) {
-    //   rightSpeed = abs(rightSpeed) < 5 ? (rightSpeed < 0 ? -5 : 5) : rightSpeed;
-    // }
- 		leftDrive.move_velocity(leftSpeed*direction);
- 		rightDrive.move_velocity(rightSpeed*direction);
- 		if (clearedTimer && !((abs(leftDifference) <= 10 && abs(rightDifference) <= 10))) {
+    if ((leftDifference) > THRESHOLD) {
+      leftSpeed = abs(leftSpeed) < MINVEL ? (leftSpeed < 0 ? -MINVEL : MINVEL) : leftSpeed;
+    }
+    if (abs(rightDifference) > THRESHOLD) {
+      rightSpeed = abs(rightSpeed) < MINVEL ? (rightSpeed < 0 ? -MINVEL : MINVEL) : rightSpeed;
+    }
+    if (leftDistance != 0 && rightDistance != 0) {
+      leftSpeed *= rightDistance/leftDistance;
+      rightSpeed *= leftDistance/rightDistance;
+    }
+ 		leftDrive.move(leftSpeed*direction);
+ 		rightDrive.move(rightSpeed*direction);
+ 		if (clearedTimer && !((abs(leftDifference) <= THRESHOLD && abs(rightDifference) <= THRESHOLD))) {
  			clearedTimer = false;
  		}
  		if ((clearedTimer && timer.getTime() >= 100)) {
@@ -55,14 +60,14 @@ double ticksPerRevolution = 1390*(900.0/392.0);
        rightDrive.move(0);
  			return;
  		}
- 		if ((abs(leftDifference) <= 10 && abs(rightDifference) <= 10 && !clearedTimer)) {
+ 		if ((abs(leftDifference) <= THRESHOLD && abs(rightDifference) <= THRESHOLD && !clearedTimer)) {
  			clearedTimer = true;
  			timer.reset();
  		}
  	}
  }
  void go(double tiles) {
-   go(tiles, 200);
+   go(tiles, 127);
  }
  void goConstVel(double tiles, double vel) {
    double distance = tiles*ticksPerTile;
@@ -96,48 +101,6 @@ double ticksPerRevolution = 1390*(900.0/392.0);
    rightDrive.move(0);
  }
 
- void turnDegrees(double degrees) {
-   double distance = (degrees/360.0)*ticksPerRevolution;
-   sdl::Timer timer;
-   leftDrive.reset_position();
-   rightDrive.reset_position();
- 	int direction = 1;
-   if (distance < 0) {
-   	direction *= -1;
-   	distance = abs(distance);
-   }
-
- 	bool clearedTimer = false;
- 	while (true) {
- 		double leftDistance = abs(leftDrive.get_position());
- 		double rightDistance = abs(rightDrive.get_position());
- 		double leftDifference = distance-leftDistance;
- 		double rightDifference = distance-rightDistance;
- 		std::int32_t leftSpeed = (200) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
- 		std::int32_t rightSpeed = (200) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
-     leftSpeed = abs(leftSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : leftSpeed;
-     rightSpeed = abs(rightSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : rightSpeed;
- 		if (leftDistance != 0 && rightDistance != 0) {
- 			leftSpeed *= ((float)rightDistance)/((float)leftDistance);
- 			rightSpeed *= ((float)leftDistance)/((float)rightDistance);
- 		}
- 		leftDrive.move_velocity(leftSpeed*direction);
- 		rightDrive.move_velocity(rightSpeed*direction*-1);
- 		if (clearedTimer && !((abs(leftDifference) <= 10 && abs(rightDifference) <= 10))) {
- 			clearedTimer = false;
- 		}
- 		if ((clearedTimer && timer.getTime() >= 100)) {
- 			leftDrive.move(0);
-       rightDrive.move(0);
- 			return;
- 		}
- 		if ((abs(leftDifference) <= 10 && abs(rightDifference) <= 10 && !clearedTimer)) {
- 			clearedTimer = true;
- 			timer.reset();
- 		}
- 	}
- }
-
  void turnDegrees(double degrees, double maxVel) {
    double distance = (degrees/360.0)*ticksPerRevolution;
    sdl::Timer timer;
@@ -157,11 +120,19 @@ double ticksPerRevolution = 1390*(900.0/392.0);
  		double rightDifference = distance-rightDistance;
  		std::int32_t leftSpeed = (maxVel) * (leftDifference < 200 ? (leftDifference/200.0) : 1);
  		std::int32_t rightSpeed = (maxVel) * (rightDifference < 200 ? (rightDifference/200.0) : 1);
-     leftSpeed = abs(leftSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : leftSpeed;
-     rightSpeed = abs(rightSpeed) < 5 ? (leftSpeed < 0 ? -5 : 5) : rightSpeed;
- 		leftDrive.move_velocity(leftSpeed*direction);
- 		rightDrive.move_velocity(rightSpeed*direction*-1);
- 		if (clearedTimer && !((abs(leftDifference) <= 10 && abs(rightDifference) <= 10))) {
+     if (leftDifference > THRESHOLD) {
+       leftSpeed = abs(leftSpeed) < MINVEL ? (leftSpeed < 0 ? -MINVEL : MINVEL) : leftSpeed;
+     }
+     if (abs(rightDifference) > THRESHOLD) {
+       rightSpeed = abs(rightSpeed) < MINVEL ? (rightSpeed < 0 ? -MINVEL : MINVEL) : rightSpeed;
+     }
+     if (leftDistance != 0 && rightDistance != 0) {
+       leftSpeed *= rightDistance/leftDistance;
+       rightSpeed *= leftDistance/rightDistance;
+     }
+ 		leftDrive.move(leftSpeed*direction*-1);
+ 		rightDrive.move(rightSpeed*direction);
+ 		if (clearedTimer && !((abs(leftDifference) <= THRESHOLD && abs(rightDifference) <= THRESHOLD))) {
  			clearedTimer = false;
  		}
  		if ((clearedTimer && timer.getTime() >= 100)) {
@@ -169,12 +140,16 @@ double ticksPerRevolution = 1390*(900.0/392.0);
        rightDrive.move(0);
  			return;
  		}
- 		if ((abs(leftDifference) <= 10 && abs(rightDifference) <= 10 && !clearedTimer)) {
+ 		if ((abs(leftDifference) <= THRESHOLD && abs(rightDifference) <= THRESHOLD && !clearedTimer)) {
  			clearedTimer = true;
  			timer.reset();
  		}
  	}
  }
+
+  void turnDegrees(double degrees) {
+    turnDegrees(degrees, 127);
+  }
 
 void autonomous() {
   // pros::motor_pid_s_t velPid = pros::Motor::convert_pid(10,10,10,10);

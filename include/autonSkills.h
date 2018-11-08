@@ -5,41 +5,44 @@
 // intake = -127;
 // go(-1.0);
 
-
-
-// flyWheel = 127;		          //Start Shooter
-// go(-2.1);					    //Toggle flag
-// go(1.1);					    //Prepare to shoot
-// turnDegrees(9);       //  --
-// intake = -127;	           	//Shoot
-// pros::delay(1000);			   	//  --
-// intake = 0;			          	//  --
-// flyWheel = 0;	            	//  --
-// turnDegrees(-9);			//	--
-// go(1.0);				    	//	--
-// turnDegrees(90);			//Start towards first cap
-// go(-1.0);					    //	--
-// turnDegrees(-90);			//	--
-// intake = 127;			          //Flip Cap
-// go(-1.5);					    //	--
-// intake = 0;				          //	--
-// go(1.5);					    //	--
-// turnDegrees(90);			//	--
-// go(1.0);					    //	--
-// goTime(0.5, 127);			//[Checkpoint] - Second Cap
-// intake = -127;		          //Intake ball
-// go(-2.2);				     	//	--
-// flyWheel = 127;		          //	--
-// turnDegrees(-90);			//Flip flag
-// goTime(0.5, 127);			//[Checkpoint] - Middle flag
-// go(2.2);					    //	--
-// go(-1.0);				     	//Shoot
-// turnDegrees(9);		 		//	--
-// pros::delay(1000);		  	 	//	--
-// intake = 0;			 	          //Turn off shooter
-// flyWheel = 0;	            	//	--
-// turnDegrees(81);			//Turn toward next cap
-
+int intakeSpeed = 100;
+flyWheel = 127;		    //Start Shooter
+go(-2.0);					    //Toggle flag
+go(1.0);					    //Prepare to shoot
+turnDegrees(20);      //  --
+intake = -127;	      //Shoot
+pros::delay(700);	  	//  --
+intake = 0;			      //  --
+flyWheel = 0;	        //  --
+turnDegrees(-20);			//	--
+go(1.0);				    	//	--
+turnDegrees(90);			//Start towards first cap
+go(-1.0);					    //	--
+turnDegrees(-90);			//	--
+intake = intakeSpeed; //Flip Cap
+go(-1.5);					    //	--
+intake = 0;				    //	--
+go(1.7);					    //	--
+turnDegrees(90);			//	--
+go(1.0);					    //	--
+goTime(0.5, 127);			//[Checkpoint] - Second Cap
+intake = -127;        //Intake ball
+go(-2.2);				     	//	--
+intake = 0;           //  --
+flyWheel = 127;		    //	--
+turnDegrees(-90);			//Flip flag
+goTime(0.5, 70);			//[Checkpoint] - Middle flag I
+intake = -127;        //  --
+go(-2.2);					    //	--
+intake = 0;           //  --
+goTime(0.5, -127);    //[Checkpoint] - Middle flag II
+go(1.2);				     	//Shoot
+intake = -127;        //  --
+turnDegrees(20);			//	--
+pros::delay(1000); 		//	--
+intake = 0;			 	    //Turn off shooter
+flyWheel = 0;	        //	--
+turnDegrees(70);			//Turn toward next cap
 
 
 /*

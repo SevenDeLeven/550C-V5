@@ -77,7 +77,7 @@ void motorgroup::set_zero_position(const double position) {
 
 void motorgroup::reset_position() {
   for (int i = 0; i < this->motors.size(); i++) {
-    this->motors[i].set_zero_position(this->motors[i].get_position());
+    this->motors[i].set_zero_position(this->motors[i].tare_position());
   }
 }
 
