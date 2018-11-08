@@ -23,21 +23,19 @@ intake = intakeSpeed; //Flip Cap
 go(-1.5);					    //	--
 intake = 0;				    //	--
 go(1.7);					    //	--
-turnDegrees(90);			//	--
+turnDegrees(83);			//	--
 go(1.0);					    //	--
 goTime(0.5, 127);			//[Checkpoint] - Second Cap
 intake = -127;        //Intake ball
 go(-2.2);				     	//	--
-intake = 0;           //  --
 flyWheel = 127;		    //	--
 turnDegrees(-90);			//Flip flag
-goTime(0.5, 70);			//[Checkpoint] - Middle flag I
-intake = -127;        //  --
-go(-2.2);					    //	--
 intake = 0;           //  --
+goTime(0.5, 70);			//[Checkpoint] - Middle flag I
+go(-2.2);					    //	--
 goTime(0.5, -127);    //[Checkpoint] - Middle flag II
-go(1.2);				     	//Shoot
 intake = -127;        //  --
+go(1.2);				     	//Shoot
 turnDegrees(20);			//	--
 pros::delay(1000); 		//	--
 intake = 0;			 	    //Turn off shooter
