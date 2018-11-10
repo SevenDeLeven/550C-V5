@@ -1,6 +1,8 @@
 #ifndef VARS_H
 #define VARS_H
 
+#include "pros/adi.hpp"
+
 #define SIDE_CAP 1
 #define SIDE_FLAG 2
 #define TEAM_BLUE 1
@@ -17,10 +19,13 @@ extern int autonTeam;
 extern int autonSide;
 
 extern pros::Motor leftSide1;
-extern pros::Motor rightSide1;
 extern pros::Motor leftSide2;
-extern pros::Motor rightSide2;
-extern pros::Motor flyWheel;
+extern pros::Motor tilter;
+extern pros::Motor launcher;
 extern pros::Motor intake;
+extern pros::Motor rightSide1;
+extern pros::Motor rightSide2;
+
+extern pros::ADIPotentiometer tiltPotent;
 
 #endif

@@ -10,7 +10,8 @@
  * to keep execution time for this mode under a few seconds.
  */
 void initialize() {
-	flyWheel.set_reversed(true);
+	//flyWheel.set_reversed(true);
+	launcher.set_reversed(true);
 }
 
 /**

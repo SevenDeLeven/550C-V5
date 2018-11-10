@@ -1,0 +1,5 @@
+Shooter Ideas:
+  --Extend out tilter motor, insert potentiometer to measure angle
+  --Ratchet system for tension holding.
+  --Middle flag close: 182
+  --Far flag close: 2091

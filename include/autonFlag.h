@@ -1,12 +1,12 @@
 // setSecondsPerTile(3.0);
-flyWheel.move(127);	                	//Start shooter
+//flyWheel.move(127);	                	//Start shooter
 go(-2.2);				           	//Toggle flag
 go(1.2);				           	//	--
 turnDegrees(-8*direction);	//	--
 intake.move(-127);		            //Shoot Ball
 pros::delay(1000);			         	//	--
 intake.move(0);			             	//	--
-flyWheel.move(0);		              //	--
+//flyWheel.move(0);		              //	--
 turnDegrees(-82*direction);	//Turn toward cap
 intake.move(127);   		         	//Flip Cap
 go(-1.4);				           	//	--
