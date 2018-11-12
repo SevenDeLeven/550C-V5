@@ -16,3 +16,14 @@ pros::Motor rightSide1(9);
 pros::Motor rightSide2(10);
 
 pros::ADIPotentiometer tiltPotent(1);
+
+double tiltOffset = 0;
+
+void calibrateTilter() {
+  tiltOffset = (tiltPotent.get_value()/TILTERRATIO) - tilter.get_position();
+}
+
+void set_tilter_position(int position) {
+  double tiltDistance = tiltOffset + (position/TILTERRATIO);
+  tilter.move_absolute(tiltDistance, 100);
+}

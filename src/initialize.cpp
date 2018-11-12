@@ -12,6 +12,7 @@
 void initialize() {
 	//flyWheel.set_reversed(true);
 	launcher.set_reversed(true);
+	tilter.set_reversed(true);
 }
 
 /**

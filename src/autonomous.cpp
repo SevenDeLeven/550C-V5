@@ -21,6 +21,16 @@ double ticksPerRevolution = 1470*(900.0/392.0);
  sdl::motorgroup leftDrive;
  sdl::motorgroup rightDrive;
 
+
+ void calibrateTilter() {
+   tiltOffset = (tiltPotent.get_value()/TILTERRATIO) - tilter.get_position();
+ }
+
+ void set_tilter_position(int position) {
+   double tiltDistance = tiltOffset + (position/TILTERRATIO);
+   tilter.move_absolute(tiltDistance, 100);
+ }
+
  void go(double tiles, double maxVel) {
    double distance = tiles*ticksPerTile;
    sdl::Timer timer;
@@ -152,6 +162,7 @@ double ticksPerRevolution = 1470*(900.0/392.0);
   }
 
 void autonomous() {
+  calibrateTilter();
   // pros::motor_pid_s_t velPid = pros::Motor::convert_pid(10,10,10,10);
   // leftSide1.set_vel_pid(velPid);
   // leftSide2.set_vel_pid(velPid);
