@@ -3,4 +3,4 @@ Shooter Ideas:
   --Ratchet system for tension holding.
   --Middle flag close: 182
   --Far flag close: 2091
-  --Ticks per Potentiometer Tick: 638.1/4096
+  --Ticks per Potentiometer Tick: (638.1/4096.0)

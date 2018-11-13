@@ -23,7 +23,7 @@ double ticksPerRevolution = 1470*(900.0/392.0);
 
 
  void calibrateTilter() {
-   tiltOffset = (tiltPotent.get_value()/TILTERRATIO) - tilter.get_position();
+   tiltOffset = -(tiltPotent.get_value()/TILTERRATIO) + tilter.get_position();
  }
 
  void set_tilter_position(int position) {

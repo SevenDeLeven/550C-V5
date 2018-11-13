@@ -20,7 +20,7 @@ pros::ADIPotentiometer tiltPotent(1);
 double tiltOffset = 0;
 
 void calibrateTilter() {
-  tiltOffset = (tiltPotent.get_value()/TILTERRATIO) - tilter.get_position();
+  tiltOffset = -(tiltPotent.get_value()/TILTERRATIO) + (tilter.get_position());
 }
 
 void set_tilter_position(int position) {

@@ -14,6 +14,7 @@
 #define LAUNCHER_BUTTON DIGITAL_X
 #define TILTER_TOP_BUTTON DIGITAL_Y
 #define TILTER_MID_BUTTON DIGITAL_A
+#define DEBUG_BUTTON DIGITAL_DOWN
 
 void opcontrol() {
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
@@ -35,16 +36,20 @@ void opcontrol() {
 
 	int inversed = 1;
 	bool directionPressed = false;
-	sdl::Timer printTimer;
 	bool tilterPressed = false;
+	bool debugPressed = false;
 
 	while (true) {
-		if (printTimer.getTime() > 500) {
-			printf("%d\n", tiltPotent.get_value());
-			printTimer.reset();
-		}
 
-		bool directionCurPressed = master.get_digital(DIGITAL_UP);
+		bool directionCurPressed = master.get_digital(DIRECTION_BUTTON);
+		bool debugCurPressed = master.get_digital(DEBUG_BUTTON);
+
+		if (debugCurPressed && !debugPressed) {
+			calibrateTilter();
+			printf("PT: %d\n", tiltPotent.get_value());
+			printf("TP: %f\n", tilter.get_target_position());
+			printf("TO: %f\n", tiltOffset);
+		}
 
 		if (directionCurPressed && !directionPressed) {
 			inversed *= -1;
@@ -75,6 +80,7 @@ void opcontrol() {
 		rightDrive.move(right);
 
 		directionPressed = directionCurPressed;
+		debugPressed = debugCurPressed;
 		tilterPressed = tilterTopPressed || tilterMidPressed;
 		pros::delay(20);
 	}

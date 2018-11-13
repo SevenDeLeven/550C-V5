@@ -13,6 +13,7 @@ void initialize() {
 	//flyWheel.set_reversed(true);
 	launcher.set_reversed(true);
 	tilter.set_reversed(true);
+	launcher.set_gearing(pros::motor_gearset_e_t::E_MOTOR_GEARSET_36);
 }
 
 /**
