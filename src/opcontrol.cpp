@@ -40,7 +40,8 @@ void opcontrol() {
 	bool directionPressed = false;
 	bool tilterPressed = false;
 	bool debugPressed = false;
-
+	bool firePressed = false;
+	sdl::Timer launchTimer;
 	while (true) {
 
 		bool directionCurPressed = master.get_digital(DIRECTION_BUTTON);
@@ -56,10 +57,15 @@ void opcontrol() {
 		if (directionCurPressed && !directionPressed) {
 			inversed *= -1;
 		}
+		bool fireCurPressed = master.get_digital(LAUNCHER_BUTTON);
+		if (fireCurPressed && !firePressed) {
+			launchTimer.reset();
+		}
 
 		bool tilterMidPressed = master.get_digital(TILTER_MID_BUTTON);
 		bool tilterTopPressed = master.get_digital(TILTER_TOP_BUTTON);
- 
+
+		/* READD WHEN TILTER IS CALIBRATED
 		if (tilterMidPressed && tilterMidPressed != tilterPressed) {
 			set_tilter_position(TILTER_MID_CLOSE);
 		}
@@ -67,16 +73,17 @@ void opcontrol() {
 		if (tilterTopPressed && tilterTopPressed != tilterPressed) {
 			set_tilter_position(TILTER_TOP_CLOSE);
 		}
+		*/
 
 		int left = (master.get_analog(FORWARD_AXIS) * inversed) + master.get_analog(TURN_AXIS);
 		int right = (master.get_analog(FORWARD_AXIS) * inversed) - master.get_analog(TURN_AXIS);
 		int intakeSpeed = (((int)master.get_digital(INTAKE_UP_BUTTON)) - ((int)master.get_digital(INTAKE_DOWN_BUTTON))) * 127;
 		int armSpeed = (((int)master.get_digital(ARM_UP_BUTTON)) - ((int)master.get_digital(ARM_DOWN_BUTTON))) * 127;
-		// int tilterSpeed = ((int)master.get_digital(DIGITAL_A) - (int)master.get_digital(DIGITAL_Y)) * 40;
-		int launcherSpeed = ((int) master.get_digital(LAUNCHER_BUTTON)) * 127;
+		int tilterSpeed = ((int)master.get_digital(DIGITAL_A) - (int)master.get_digital(DIGITAL_Y)) * 40;
+		int launcherSpeed = ((int) (launchTimer.getTime() < 1000 || !launchButton.get_value())) * 127;
 
 		intake = intakeSpeed;
-		// tilter = tilterSpeed;
+		tilter = tilterSpeed;
 		launcher = launcherSpeed;
 		arm = armSpeed;
 
@@ -86,6 +93,7 @@ void opcontrol() {
 		directionPressed = directionCurPressed;
 		debugPressed = debugCurPressed;
 		tilterPressed = tilterTopPressed || tilterMidPressed;
+		firePressed = fireCurPressed;
 		pros::delay(20);
 	}
 }

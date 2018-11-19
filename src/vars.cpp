@@ -17,6 +17,7 @@ pros::Motor rightSide1(9);
 pros::Motor rightSide2(10);
 
 pros::ADIPotentiometer tiltPotent(1);
+pros::ADIButton launchButton(2);
 
 double tiltOffset = 0;
 

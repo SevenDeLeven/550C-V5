@@ -33,6 +33,7 @@ extern pros::Motor rightSide1;
 extern pros::Motor rightSide2;
 
 extern pros::ADIPotentiometer tiltPotent;
+extern pros::ADIButton launchButton;
 
 extern double tiltOffset;
 
