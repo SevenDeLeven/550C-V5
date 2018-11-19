@@ -11,6 +11,8 @@
 #define DIRECTION_BUTTON DIGITAL_UP
 #define INTAKE_UP_BUTTON DIGITAL_L1
 #define INTAKE_DOWN_BUTTON DIGITAL_L2
+#define ARM_UP_BUTTON DIGITAL_R1
+#define ARM_DOWN_BUTTON DIGITAL_R2
 #define LAUNCHER_BUTTON DIGITAL_X
 #define TILTER_TOP_BUTTON DIGITAL_Y
 #define TILTER_MID_BUTTON DIGITAL_A
@@ -57,7 +59,7 @@ void opcontrol() {
 
 		bool tilterMidPressed = master.get_digital(TILTER_MID_BUTTON);
 		bool tilterTopPressed = master.get_digital(TILTER_TOP_BUTTON);
-
+ 
 		if (tilterMidPressed && tilterMidPressed != tilterPressed) {
 			set_tilter_position(TILTER_MID_CLOSE);
 		}
@@ -69,12 +71,14 @@ void opcontrol() {
 		int left = (master.get_analog(FORWARD_AXIS) * inversed) + master.get_analog(TURN_AXIS);
 		int right = (master.get_analog(FORWARD_AXIS) * inversed) - master.get_analog(TURN_AXIS);
 		int intakeSpeed = (((int)master.get_digital(INTAKE_UP_BUTTON)) - ((int)master.get_digital(INTAKE_DOWN_BUTTON))) * 127;
+		int armSpeed = (((int)master.get_digital(ARM_UP_BUTTON)) - ((int)master.get_digital(ARM_DOWN_BUTTON))) * 127;
 		// int tilterSpeed = ((int)master.get_digital(DIGITAL_A) - (int)master.get_digital(DIGITAL_Y)) * 40;
 		int launcherSpeed = ((int) master.get_digital(LAUNCHER_BUTTON)) * 127;
 
 		intake = intakeSpeed;
 		// tilter = tilterSpeed;
 		launcher = launcherSpeed;
+		arm = armSpeed;
 
 		leftDrive.move(left);
 		rightDrive.move(right);

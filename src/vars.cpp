@@ -9,6 +9,7 @@ int autonTeam = 0;
 
 pros::Motor leftSide1(1);
 pros::Motor leftSide2(2);
+pros::Motor arm(4);
 pros::Motor intake(5);
 pros::Motor tilter(6);
 pros::Motor launcher(7);

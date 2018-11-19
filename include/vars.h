@@ -25,6 +25,7 @@ extern int autonSide;
 
 extern pros::Motor leftSide1;
 extern pros::Motor leftSide2;
+extern pros::Motor arm;
 extern pros::Motor tilter;
 extern pros::Motor launcher;
 extern pros::Motor intake;
