@@ -11,6 +11,7 @@ public:
   virtual ~Timer();
   void reset();
   int getTime();
+  void add(int a);
 }; //class Timer
 
 } //namespace sdl

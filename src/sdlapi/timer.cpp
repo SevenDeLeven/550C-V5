@@ -18,3 +18,7 @@ void Timer::reset() {
 int Timer::getTime() {
   return pros::millis()-(this->start);
 }
+
+void Timer::add(int time) {
+  this->start += time;
+}

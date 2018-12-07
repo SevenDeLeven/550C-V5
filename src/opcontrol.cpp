@@ -1,10 +1,13 @@
 #include "main.h"
 #include "sdlapi/motors.hpp"
 #include "sdlapi/timer.hpp"
+#include <vector>
 
 #define FLYWHEEL_MAX 1
 #define FLYWHEEL_MIDDLEFAR 2
 #define FLYWHEEL_TOPFAR 3
+
+#define SHOOT_TIME 4000
 
 #define FORWARD_AXIS ANALOG_LEFT_Y
 #define TURN_AXIS ANALOG_LEFT_X
@@ -17,9 +20,49 @@
 #define TILTER_TOP_BUTTON DIGITAL_Y
 #define TILTER_MID_BUTTON DIGITAL_A
 #define DEBUG_BUTTON DIGITAL_DOWN
+#define DOUBLEFIRE_BUTTON DIGITAL_B
 
+
+sdl::Timer doubleLaunchTimer;
+
+void doubleFire() {
+	doubleLaunchTimer.reset();
+}
+
+void tiltMid() {
+	set_tilter_position(TILTER_MID_CLOSE);
+}
+
+void tiltTop() {
+	set_tilter_position(TILTER_TOP_CLOSE);
+}
+
+void punch() {
+	launcher = 127;
+	pros::delay(500);
+	while (launchButton.get_value() != 1) {
+
+	}
+	launcher = 0;
+}
+
+void f_doubleFire(void*) {
+	while (true) {
+		while (doubleLaunchTimer.getTime() >= SHOOT_TIME) {pros::Task::delay(20);}
+		intake = 127;
+		tiltMid();
+		pros::delay(500);
+		punch();
+		tiltTop();
+		pros::delay(500);
+		punch();
+	}
+}
+
+
+pros::Task doubleFireTask(f_doubleFire);
 void opcontrol() {
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
+	pros::Controller controller(pros::E_CONTROLLER_MASTER);
 	calibrateTilter();
 	leftSide1.set_reversed(false);
 	leftSide2.set_reversed(false);
@@ -37,63 +80,82 @@ void opcontrol() {
 	tilter.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
 
 	int inversed = 1;
+	bool doubleFirePressed = false;
 	bool directionPressed = false;
 	bool tilterPressed = false;
 	bool debugPressed = false;
 	bool firePressed = false;
 	sdl::Timer launchTimer;
+	doubleLaunchTimer.reset();
+	doubleLaunchTimer.add(SHOOT_TIME);
 	while (true) {
 
-		bool directionCurPressed = master.get_digital(DIRECTION_BUTTON);
-		bool debugCurPressed = master.get_digital(DEBUG_BUTTON);
+		bool directionCurPressed = controller.get_digital(DIRECTION_BUTTON);
+		// bool debugCurPressed = controller.get_digital(DEBUG_BUTTON);
+		bool doubleFireCurPressed = controller.get_digital(DOUBLEFIRE_BUTTON);
 
-		if (debugCurPressed && !debugPressed) {
-			calibrateTilter();
-			printf("PT: %d\n", tiltPotent.get_value());
-			printf("TP: %f\n", tilter.get_target_position());
-			printf("TO: %f\n", tiltOffset);
-		}
+		// if (debugCurPressed && !debugPressed) {
+		// 	calibrateTilter();
+		// 	printf("PT: %d\n", tiltPotent.get_value());
+		// 	printf("TP: %f\n", tilter.get_target_position());
+		// 	printf("TO: %f\n", tiltOffset);
+		// }
 
 		if (directionCurPressed && !directionPressed) {
 			inversed *= -1;
 		}
-		bool fireCurPressed = master.get_digital(LAUNCHER_BUTTON);
+
+
+		bool fireCurPressed = controller.get_digital(LAUNCHER_BUTTON);
 		if (fireCurPressed && !firePressed) {
 			launchTimer.reset();
 		}
 
-		bool tilterMidPressed = master.get_digital(TILTER_MID_BUTTON);
-		bool tilterTopPressed = master.get_digital(TILTER_TOP_BUTTON);
+		bool tilterMidPressed = controller.get_digital(TILTER_MID_BUTTON);
+		bool tilterTopPressed = controller.get_digital(TILTER_TOP_BUTTON);
 
-		/* READD WHEN TILTER IS CALIBRATED
-		if (tilterMidPressed && tilterMidPressed != tilterPressed) {
-			set_tilter_position(TILTER_MID_CLOSE);
+		if (doubleLaunchTimer.getTime() >= SHOOT_TIME) {
+			/* READ WHEN TILTER IS CALIBRATED */
+			if (tilterMidPressed && tilterMidPressed != tilterPressed) {
+				set_tilter_position(TILTER_MID_CLOSE);
+			}
+
+			if (tilterTopPressed && tilterTopPressed != tilterPressed) {
+				set_tilter_position(TILTER_TOP_CLOSE);
+			}
+			if (doubleFirePressed && doubleFireCurPressed != doubleFirePressed) {
+				doubleFire();
+			}
 		}
 
-		if (tilterTopPressed && tilterTopPressed != tilterPressed) {
-			set_tilter_position(TILTER_TOP_CLOSE);
-		}
-		*/
 
-		int left = (master.get_analog(FORWARD_AXIS) * inversed) + master.get_analog(TURN_AXIS);
-		int right = (master.get_analog(FORWARD_AXIS) * inversed) - master.get_analog(TURN_AXIS);
-		int intakeSpeed = (((int)master.get_digital(INTAKE_UP_BUTTON)) - ((int)master.get_digital(INTAKE_DOWN_BUTTON))) * 127;
-		int armSpeed = (((int)master.get_digital(ARM_UP_BUTTON)) - ((int)master.get_digital(ARM_DOWN_BUTTON))) * 127;
-		int tilterSpeed = ((int)master.get_digital(DIGITAL_A) - (int)master.get_digital(DIGITAL_Y)) * 40;
+
+		int left = (controller.get_analog(FORWARD_AXIS) * inversed) + controller.get_analog(TURN_AXIS);
+		int right = (controller.get_analog(FORWARD_AXIS) * inversed) - controller.get_analog(TURN_AXIS);
+		int intakeSpeed = (((int)controller.get_digital(INTAKE_UP_BUTTON)) - ((int)controller.get_digital(INTAKE_DOWN_BUTTON))) * 127;
+		int armSpeed = (((int)controller.get_digital(ARM_UP_BUTTON)) - ((int)controller.get_digital(ARM_DOWN_BUTTON))) * 127;
+		//int tilterSpeed = ((int)controller.get_digital(DIGITAL_A) - (int)controller.get_digital(DIGITAL_Y)) * 40;
 		int launcherSpeed = ((int) (launchTimer.getTime() < 1000 || !launchButton.get_value())) * 127;
 
-		intake = intakeSpeed;
-		tilter = tilterSpeed;
-		launcher = launcherSpeed;
+		//tilter = tilterSpeed;
+		if (doubleLaunchTimer.getTime() >= SHOOT_TIME) {
+			launcher = launcherSpeed;
+			if (launcherSpeed == 0) {
+				launcher.set_brake_mode(MOTOR_BRAKE_HOLD);
+			}
+			intake = intakeSpeed;
+		}
+
 		arm = armSpeed;
 
 		leftDrive.move(left);
 		rightDrive.move(right);
 
 		directionPressed = directionCurPressed;
-		debugPressed = debugCurPressed;
+		// debugPressed = debugCurPressed;
 		tilterPressed = tilterTopPressed || tilterMidPressed;
 		firePressed = fireCurPressed;
-		pros::delay(20);
+		doubleFirePressed = doubleFireCurPressed;
+		pros::Task::delay(20);
 	}
 }

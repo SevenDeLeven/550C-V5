@@ -22,10 +22,10 @@ pros::ADIButton launchButton(2);
 double tiltOffset = 0;
 
 void calibrateTilter() {
-  tiltOffset = -(tiltPotent.get_value()/TILTERRATIO) + (tilter.get_position());
+  tilter.set_zero_position(-tiltPotent.get_value()/TILTERRATIO);
 }
 
-void set_tilter_position(int position) {
-  double tiltDistance = tiltOffset + (position/TILTERRATIO);
-  tilter.move_absolute(tiltDistance, 100);
+void setTilterPosition(int position) {
+  double tiltDistance = (position/TILTERRATIO);
+  tilter.move_absolute(tiltDistance, 200);
 }
