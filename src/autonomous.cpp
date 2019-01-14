@@ -21,15 +21,15 @@ double ticksPerRevolution = 1470*(900.0/392.0);
  sdl::motorgroup leftDrive;
  sdl::motorgroup rightDrive;
 
-
- void calibrateTilter() {
-   tiltOffset = -(tiltPotent.get_value()/TILTERRATIO) + tilter.get_position();
- }
-
- void set_tilter_position(int position) {
-   double tiltDistance = tiltOffset + (position/TILTERRATIO);
-   tilter.move_absolute(tiltDistance, 100);
- }
+ // void punch() {
+ // 	launcher = 127;
+ // 	pros::delay(1000);
+ // 	while (launchButton.get_value() != 1) {
+ //
+ // 	}
+ // 	launcher = 0;
+ // 	launcher.set_brake_mode(MOTOR_BRAKE_HOLD);
+ // }
 
  void go(double tiles, double maxVel) {
    double distance = tiles*ticksPerTile;

@@ -10,10 +10,8 @@
 #define AUTON_MATCH 1
 #define AUTON_SKILLS 2
 
-#define TILTER_MID_CLOSE 1400
-#define TILTER_TOP_CLOSE 5
-
-#define TILTERRATIO (4096.0/638.1)
+#define TILTER_MID_CLOSE 8
+#define TILTER_TOP_CLOSE 520
 
 namespace pros {
 class Motor;
@@ -25,9 +23,9 @@ extern int autonSide;
 
 extern pros::Motor leftSide1;
 extern pros::Motor leftSide2;
-extern pros::Motor arm;
 extern pros::Motor tilter;
-extern pros::Motor launcher;
+extern pros::Motor launcher1;
+extern pros::Motor launcher2;
 extern pros::Motor intake;
 extern pros::Motor rightSide1;
 extern pros::Motor rightSide2;
@@ -35,9 +33,10 @@ extern pros::Motor rightSide2;
 extern pros::ADIPotentiometer tiltPotent;
 extern pros::ADIButton launchButton;
 
-extern double tiltOffset;
-
 extern void calibrateTilter();
+extern void tiltMid();
+extern void tiltTop();
+extern void punch();
 extern void set_tilter_position(int position);
 
 #endif
