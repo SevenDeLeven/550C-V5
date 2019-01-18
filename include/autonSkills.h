@@ -1,39 +1,68 @@
-// go(-2.0);           //Flip flag
-// go(1.0);            //  --
-// turnDegrees(16);    //Shoot mid flag close
-// launcher = 127;     //  --
-// pros::delay(1000);  //  --
-// launcher = 0;       //  --
-// turnDegrees(-16);   //  --
-// go(1.0);            //Flip close flagside cap
-// turnDegrees(90);    //  --
-// goTime(0.5, 127);   //[Checkpoint] - Close flagside cap
-// go(-1.0);           //  --
-// turnDegrees(-90);   //  --
-// intake = -127;      //  --
-// go(-1.5);           //  --
-// intake = 0;         //  --
-// go(1.5);            //  --
-// turnDegrees(90);    //Get Close flagside parking cap ball
-// intake = 127;       //  --
-// go(-1.2);           //  --
-// go(0.2);            //  --
-// turnDegrees(-90);   //Middle flag
-// goTime(0.5, 40);    //[Checkpoint] - Middle bottom flag
+sdl::Timer tiltTimer;
 tilter = -100;
-pros::delay(500);
-punch();
+launcher1 = 127;
+launcher2 = 127;
+while (!launchButton.get_value()) {
+
+}
+launcher1.move_velocity(0);
+launcher2.move_velocity(0);
+launcher1.set_brake_mode(MOTOR_BRAKE_HOLD);
+launcher2.set_brake_mode(MOTOR_BRAKE_HOLD);
+while (tiltTimer.getTime() < 500) {
+
+}
 calibrateTilter();
 tiltMid();
-go(-1.9);
-go(1.0);
-tiltTop();
-turnDegrees(90);
-intake = 127;
-go(-1.0);
-go(1.0);
-turnDegrees(90);
-go(-2.0);
+intake = -127;
+go(2.0);
+go(-1.2);
 turnDegrees(-90);
-goTime(0.5,127);
-go(-3.0);
+pros::delay(250);
+intake = 127;
+go(1.5);
+intake = -127;
+go(-1.25);
+turnDegrees(-90);
+go(1.0);
+goTime(0.5, 127);
+go(-0.4);
+turnDegrees(90);
+if (getLoadCount() == 1) {
+  punch();
+} else if (getLoadCount() == 2) {
+  punch();
+  tiltTop();
+  turnDegrees(-6);
+  punch();
+  turnDegrees(6);
+}
+tiltMid();
+turnDegrees(-13);
+go(2.0);
+goTime(0.5, 127);
+go(-1.1);
+turnDegrees(90);
+goTime(0.5, -127);
+go(2.0);
+turnDegrees(-90);
+if (getLoadCount() > 0) {
+  go(-0.8);
+  turnDegrees(15);
+  if (getLoadCount() == 1) {
+    punch();
+  } if (getLoadCount() > 0) {
+    punch();
+    tiltTop();
+    pros::delay(500);
+    punch();
+    tiltMid();
+  }
+  turnDegrees(-15);
+  go(0.8);
+}
+intake = -127;
+goTime(1.0, 127);
+go(-1.2);
+intake = 0;
+intake = 0;

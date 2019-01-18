@@ -16,5 +16,8 @@ pros::Motor launcher1(7);
 pros::Motor rightSide1(9);
 pros::Motor rightSide2(10);
 
+pros::ADIUltrasonic centerSonar(5,6);
+pros::ADIUltrasonic leftSonar(3,4);
+pros::ADIUltrasonic rightSonar(7,8);
 pros::ADIPotentiometer tiltPotent(1);
 pros::ADIButton launchButton(2);

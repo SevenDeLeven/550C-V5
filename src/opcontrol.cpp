@@ -34,6 +34,22 @@ void tiltTop() {
 	set_tilter_position(TILTER_TOP_CLOSE);
 }
 
+bool detectLoaded() {
+	return centerSonar.get_value() <= 100;
+}
+
+bool detectLeftLoaded() {
+	return leftSonar.get_value() <= 50;
+}
+
+bool detectRightLoaded() {
+	return rightSonar.get_value() <= 50;
+}
+
+int getLoadCount() {
+	return (detectLoaded() ? 1 : 0) + (detectRightLoaded() ? 1 : 0) + (detectLeftLoaded() ? 1 : 0);
+}
+
 void f_doubleFire(void*) {
 	while (true) {
 		while (doubleLaunchTimer.getTime() >= SHOOT_TIME) {pros::Task::delay(20);}
@@ -44,16 +60,17 @@ void f_doubleFire(void*) {
 		launcher2 = 127;
 		pros::delay(500);
 		tiltTop();
-		pros::delay(2000);
+		pros::delay(1000);
 		intake = 0;
 		launcher1 = 0;
 		launcher2 = 0;
+		pros::delay(1000);
 	}
 }
 void punch() {
 	launcher1 = 127;
 	launcher2 = 127;
-	pros::delay(1000);
+	pros::delay(500);
 	while (launchButton.get_value() != 1) {
 
 	}

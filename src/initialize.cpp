@@ -1,5 +1,6 @@
 #include "main.h"
 #include "display/lvgl.h"
+#include "sdlapi/timer.hpp"
 
 #include <string>
 
@@ -9,6 +10,7 @@
  * All other competition modes are blocked by initialize; it is recommended
  * to keep execution time for this mode under a few seconds.
  */
+
 void initialize() {
 	intake.set_reversed(true);
 	launcher1.set_reversed(true);
@@ -54,6 +56,7 @@ lv_obj_t * right_button = lv_btn_create(buttonContainer, NULL);
 lv_obj_t * right_button_text = lv_label_create(right_button, NULL);
 
 auton_choice_t choice;
+
 
 std::string getAutonSideName(int as) {
 	if (as == SIDE_CAP) {
@@ -154,6 +157,6 @@ void competition_initialize() {
 	updateState();
 	while (true) {
 		lv_task_handler();
-		pros::delay(5);
+		pros::delay(1);
 	}
 }

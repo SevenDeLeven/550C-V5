@@ -2,7 +2,7 @@
 #include "sdlapi/motors.hpp"
 #include "sdlapi/timer.hpp"
 #define THRESHOLD 80
-#define MINVEL 18
+#define MINVEL 27
 /**
  * Runs the user autonomous code. This function will be started in its own task
  * with the default priority and stack size whenever the robot is enabled via
@@ -32,10 +32,9 @@ double ticksPerRevolution = 1470*(900.0/392.0);
  // }
 
  void go(double tiles, double maxVel) {
+   tiles = -tiles;
    double distance = tiles*ticksPerTile;
    sdl::Timer timer;
-   leftDrive.reset_position();
-   rightDrive.reset_position();
  	 int direction = 1;
    if (distance < 0) {
    	direction *= -1;
@@ -43,6 +42,13 @@ double ticksPerRevolution = 1470*(900.0/392.0);
    }
 
  	bool clearedTimer = false;
+  leftDrive.move(maxVel*direction/4);
+  rightDrive.move(maxVel*direction/4);
+  pros::delay(250);
+  leftDrive.move(0);
+  rightDrive.move(0);
+  leftDrive.reset_position();
+  rightDrive.reset_position();
  	while (true) {
  		double leftDistance = abs(leftDrive.get_position());
  		double rightDistance = abs(rightDrive.get_position());
@@ -50,15 +56,22 @@ double ticksPerRevolution = 1470*(900.0/392.0);
  		double rightDifference = distance-rightDistance;
  		std::int32_t leftSpeed = (maxVel) * (leftDifference < 800 ? (leftDifference/800.0) : 1);
  		std::int32_t rightSpeed = (maxVel) * (rightDifference < 800 ? (rightDifference/800.0) : 1);
+    if (leftDistance != 0 && rightDistance != 0) {
+      double leftFraction = (rightDistance/leftDistance) - 1.0;
+      leftFraction *= 4.0;
+      leftFraction += 1.0;
+      double rightFraction = (leftDistance/rightDistance) - 1.0;
+      rightFraction *= 4.0;
+      rightFraction += 1.0;
+
+      leftSpeed *= leftFraction;
+      rightSpeed *= rightFraction;
+    }
     if ((leftDifference) > THRESHOLD) {
       leftSpeed = abs(leftSpeed) < MINVEL ? (leftSpeed < 0 ? -MINVEL : MINVEL) : leftSpeed;
     }
     if (abs(rightDifference) > THRESHOLD) {
       rightSpeed = abs(rightSpeed) < MINVEL ? (rightSpeed < 0 ? -MINVEL : MINVEL) : rightSpeed;
-    }
-    if (leftDistance != 0 && rightDistance != 0) {
-      leftSpeed *= rightDistance/leftDistance;
-      rightSpeed *= leftDistance/rightDistance;
     }
  		leftDrive.move(leftSpeed*direction);
  		rightDrive.move(rightSpeed*direction);
@@ -79,24 +92,109 @@ double ticksPerRevolution = 1470*(900.0/392.0);
  void go(double tiles) {
    go(tiles, 127);
  }
- void goConstVel(double tiles, double vel) {
+
+ void goCurve(double tiles, double curve, double maxVel) {
+   if (curve == 0) {
+     return;
+   }
    double distance = tiles*ticksPerTile;
-   leftDrive.reset_position();
-   rightDrive.reset_position();
- 	int direction = 1;
+   sdl::Timer timer;
+   int direction = 1;
+   if (distance < 0) {
+    direction *= -1;
+    distance = abs(distance);
+   }
+
+  bool clearedTimer = false;
+  leftDrive.move(maxVel*direction/4);
+  rightDrive.move(maxVel*direction/4);
+  pros::delay(250);
+  leftDrive.move(0);
+  rightDrive.move(0);
+  leftDrive.reset_position();
+  rightDrive.reset_position();
+  double leftTargetDistance = distance * curve;
+  double rightTargetDistance = distance / curve;
+  while (true) {
+    double leftDistance = abs(leftDrive.get_position());
+    double rightDistance = abs(rightDrive.get_position());
+    double leftDifference = leftTargetDistance-leftDistance;
+    double rightDifference = rightTargetDistance-rightDistance;
+    std::int32_t leftSpeed = (maxVel) * (leftDifference < 800 ? (leftDifference/800.0) : 1);
+    std::int32_t rightSpeed = (maxVel) * (rightDifference < 800 ? (rightDifference/800.0) : 1);
+    if ((leftDifference) > THRESHOLD) {
+      leftSpeed = abs(leftSpeed) < MINVEL ? (leftSpeed < 0 ? -MINVEL : MINVEL) : leftSpeed;
+    }
+    if (abs(rightDifference) > THRESHOLD) {
+      rightSpeed = abs(rightSpeed) < MINVEL ? (rightSpeed < 0 ? -MINVEL : MINVEL) : rightSpeed;
+    }
+    leftDrive.move(leftSpeed*direction*curve);
+    rightDrive.move(rightSpeed*direction/curve);
+    if (clearedTimer && !((abs(leftDifference) <= THRESHOLD && abs(rightDifference) <= THRESHOLD))) {
+      clearedTimer = false;
+    }
+    if ((clearedTimer && timer.getTime() >= 100)) {
+      leftDrive.move(0);
+       rightDrive.move(0);
+      return;
+    }
+    if ((abs(leftDifference) <= THRESHOLD && abs(rightDifference) <= THRESHOLD && !clearedTimer)) {
+      clearedTimer = true;
+      timer.reset();
+    }
+  }
+ }
+
+ void goCurve(double tiles, double curve) {
+   goCurve(-tiles, curve, 127);
+ }
+
+ void goConstVel(double tiles, double maxVel) {
+   tiles = -tiles;
+   double distance = tiles*ticksPerTile;
+   sdl::Timer timer;
+ 	 int direction = 1;
    if (distance < 0) {
    	direction *= -1;
    	distance = abs(distance);
    }
+
+ 	bool clearedTimer = false;
+  leftDrive.move(maxVel*direction/4);
+  rightDrive.move(maxVel*direction/4);
+  pros::delay(250);
+  leftDrive.move(0);
+  rightDrive.move(0);
+  leftDrive.reset_position();
+  rightDrive.reset_position();
  	while (true) {
  		double leftDistance = abs(leftDrive.get_position());
  		double rightDistance = abs(rightDrive.get_position());
  		double leftDifference = distance-leftDistance;
  		double rightDifference = distance-rightDistance;
- 		leftDrive.move_velocity(vel*direction);
- 		rightDrive.move_velocity(vel*direction);
- 		if ((abs(leftDifference) <= 10 && abs(rightDifference) <= 10)) {
-       leftDrive.move(0);
+ 		std::int32_t leftSpeed = (maxVel);
+ 		std::int32_t rightSpeed = (maxVel);
+    if (leftDistance != 0 && rightDistance != 0) {
+      double leftFraction = (rightDistance/leftDistance) - 1.0;
+      leftFraction *= 4.0;
+      leftFraction += 1.0;
+      double rightFraction = (leftDistance/rightDistance) - 1.0;
+      rightFraction *= 4.0;
+      rightFraction += 1.0;
+
+      leftSpeed *= leftFraction;
+      rightSpeed *= rightFraction;
+    }
+    if (leftDifference < -THRESHOLD) {
+      leftSpeed *= -1;
+    }
+    if (rightDifference < -THRESHOLD) {
+      rightSpeed *= -1;
+    }
+ 		leftDrive.move(leftSpeed*direction);
+ 		rightDrive.move(rightSpeed*direction);
+ 		if ((abs(leftDifference) <= THRESHOLD && abs(rightDifference) <= THRESHOLD)) {
+      leftDrive.move(0);
        rightDrive.move(0);
  			return;
  		}
@@ -104,6 +202,7 @@ double ticksPerRevolution = 1470*(900.0/392.0);
  }
 
  void goTime(double time, double vel) {
+   vel = -vel;
    leftDrive.move(vel);
    rightDrive.move(vel);
    pros::delay(time*1000);
@@ -112,6 +211,8 @@ double ticksPerRevolution = 1470*(900.0/392.0);
  }
 
  void turnDegrees(double degrees, double maxVel) {
+   int turnDirection = (autonType == AUTON_MATCH && autonTeam == TEAM_BLUE) ? -1 : 1;
+   degrees *= turnDirection;
    double distance = (degrees/360.0)*ticksPerRevolution;
    sdl::Timer timer;
    leftDrive.reset_position();
@@ -163,11 +264,6 @@ double ticksPerRevolution = 1470*(900.0/392.0);
 
 void autonomous() {
   calibrateTilter();
-  // pros::motor_pid_s_t velPid = pros::Motor::convert_pid(10,10,10,10);
-  // leftSide1.set_vel_pid(velPid);
-  // leftSide2.set_vel_pid(velPid);
-  // rightSide1.set_vel_pid(velPid);
-  // rightSide2.set_vel_pid(velPid);
   leftDrive.add_motor(&leftSide1);
   leftDrive.add_motor(&leftSide2);
   rightDrive.add_motor(&rightSide1);

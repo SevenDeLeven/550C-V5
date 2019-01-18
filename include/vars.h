@@ -30,6 +30,9 @@ extern pros::Motor intake;
 extern pros::Motor rightSide1;
 extern pros::Motor rightSide2;
 
+extern pros::ADIUltrasonic centerSonar;
+extern pros::ADIUltrasonic rightSonar;
+extern pros::ADIUltrasonic leftSonar;
 extern pros::ADIPotentiometer tiltPotent;
 extern pros::ADIButton launchButton;
 
@@ -38,5 +41,9 @@ extern void tiltMid();
 extern void tiltTop();
 extern void punch();
 extern void set_tilter_position(int position);
+extern bool detectLoaded();
+extern bool detectRightLoaded();
+extern bool detectLeftLoaded();
+extern int getLoadCount();
 
 #endif
