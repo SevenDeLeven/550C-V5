@@ -14,6 +14,7 @@
 void initialize() {
 	intake.set_reversed(true);
 	launcher1.set_reversed(true);
+	tilter.set_reversed(true);
 	tilter.set_encoder_units(MOTOR_ENCODER_COUNTS);
 }
 

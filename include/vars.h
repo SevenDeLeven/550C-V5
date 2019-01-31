@@ -10,8 +10,11 @@
 #define AUTON_MATCH 1
 #define AUTON_SKILLS 2
 
-#define TILTER_MID_CLOSE 8
-#define TILTER_TOP_CLOSE 520
+#define TILTER_MID_CLOSE 110
+#define TILTER_TOP_CLOSE 1000
+
+#define TICKSPERTILE (720*(900.0/392.0))
+#define TICKSPERREVOLUTION (1470*(900.0/392.0))
 
 namespace pros {
 class Motor;
@@ -30,9 +33,7 @@ extern pros::Motor intake;
 extern pros::Motor rightSide1;
 extern pros::Motor rightSide2;
 
-extern pros::ADIUltrasonic centerSonar;
-extern pros::ADIUltrasonic rightSonar;
-extern pros::ADIUltrasonic leftSonar;
+extern pros::ADIUltrasonic loadSonar;
 extern pros::ADIPotentiometer tiltPotent;
 extern pros::ADIButton launchButton;
 
@@ -42,8 +43,6 @@ extern void tiltTop();
 extern void punch();
 extern void set_tilter_position(int position);
 extern bool detectLoaded();
-extern bool detectRightLoaded();
-extern bool detectLeftLoaded();
 extern int getLoadCount();
 
 #endif

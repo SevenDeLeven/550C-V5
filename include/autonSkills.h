@@ -1,3 +1,4 @@
+
 sdl::Timer tiltTimer;
 tilter = -100;
 launcher1 = 127;
@@ -15,39 +16,40 @@ while (tiltTimer.getTime() < 500) {
 calibrateTilter();
 tiltMid();
 intake = -127;
-go(2.0);
-go(-1.2);
+go(2.15);
+go(-1.25);
 turnDegrees(-90);
 pros::delay(250);
 intake = 127;
-go(1.5);
+go(1.6);
 intake = -127;
-go(-1.25);
+go(-1.35);
 turnDegrees(-90);
 go(1.0);
 goTime(0.5, 127);
 go(-0.4);
 turnDegrees(90);
 if (getLoadCount() == 1) {
+  turnDegrees(-5);
   punch();
 } else if (getLoadCount() == 2) {
+  turnDegrees(-5);
   punch();
   tiltTop();
-  turnDegrees(-6);
+  pros::delay(500);
   punch();
-  turnDegrees(6);
 }
 tiltMid();
-turnDegrees(-13);
-go(2.0);
-goTime(0.5, 127);
+turnDegrees(-6);
+go(1.5);
+goTime(0.7, 127);
 go(-1.1);
 turnDegrees(90);
 goTime(0.5, -127);
 go(2.0);
 turnDegrees(-90);
 if (getLoadCount() > 0) {
-  go(-0.8);
+  go(-0.6);
   turnDegrees(15);
   if (getLoadCount() == 1) {
     punch();
@@ -64,5 +66,40 @@ if (getLoadCount() > 0) {
 intake = -127;
 goTime(1.0, 127);
 go(-1.2);
+turnDegrees(80);
+intake = 127;
+go(2.5);
+intake = -127;
+go(-0.45);
+turnDegrees(-90);
+go(0.9);
+goTime(0.5, 127);
+go(-2.1);
+turnDegrees(-90);
+go(1.0);
+go(-1.0);
+pros::delay(1000);
+if (getLoadCount() > 0) {
+  turnDegrees(90);
+  go(0.1);
+  turnDegrees(10);
+  if (getLoadCount() == 1) {
+    punch();
+  } if (getLoadCount() > 0) {
+    punch();
+    tiltTop();
+    pros::delay(500);
+    punch();
+    tiltMid();
+  }
+  turnDegrees(-10);
+  go(-0.1);
+  turnDegrees(-90);
+}
 intake = 0;
-intake = 0;
+go(-1.0);
+turnDegrees(-90);
+go(1.2);
+turnDegrees(90);
+goTime(0.5, -127);
+go(5.2);
