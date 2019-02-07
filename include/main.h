@@ -66,6 +66,7 @@ extern "C" {
 #include "vars.h"
 
 void autonomous(void);
+void auton_test(void);
 void auton_skills(void);
 void auton_flag(void);
 void auton_cap(void);
@@ -73,6 +74,7 @@ void initialize(void);
 void disabled(void);
 void competition_initialize(void);
 void opcontrol(void);
+
 #ifdef __cplusplus
 }
 #endif
@@ -81,7 +83,10 @@ void opcontrol(void);
 /**
  * You can add C++-only headers here
  */
-//#include <iostream>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <fstream>
 #endif
 
 #endif  // _PROS_MAIN_H_

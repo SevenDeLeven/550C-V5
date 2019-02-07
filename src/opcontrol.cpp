@@ -18,6 +18,7 @@
 #define TILTER_MID_BUTTON DIGITAL_A
 #define DEBUG_BUTTON DIGITAL_RIGHT
 #define DOUBLEFIRE_BUTTON DIGITAL_B
+#define FIX_BUTTON DIGITAL_LEFT
 
 bool doubleShooting = false;
 pros::Controller* controller;
@@ -35,6 +36,10 @@ void tiltTop() {
 
 bool detectLoaded() {
 	return loadSonar.get_value() <= 135;
+}
+
+bool readyToFire() {
+	return detectLoaded() && loadSonar.get_value() >= 115;
 }
 
 int getLoadCount() {
@@ -61,8 +66,7 @@ void f_doubleFire(void*) {
 			doubleShooting = false;
 			continue;
 		}
-		launcher1 = 127;
-		launcher2 = 127;
+		shooter(127);
 
 		waitTimer.reset();
 		while (waitTimer.getTime() < 500) {
@@ -83,8 +87,8 @@ void f_doubleFire(void*) {
 				break;
 			}
 		}
-		launcher1 = 0;
-		launcher2 = 0;
+		rightLauncher = 0;
+		leftLauncher = 0;
 		if (!shouldContinue) {
 			doubleShooting = false;
 			continue;
@@ -97,7 +101,7 @@ void f_doubleFire(void*) {
 		}
 
 
-		while (loadSonar.get_value() > 110) {
+		while (!readyToFire()) {
 			if (!controller->get_digital(DOUBLEFIRE_BUTTON)) {
 				shouldContinue = false;
 				break;
@@ -121,8 +125,8 @@ void f_doubleFire(void*) {
 			continue;
 		}
 
-		launcher1 = 127;
-		launcher2 = 127;
+		rightLauncher = 127;
+		leftLauncher = 127;
 
 		waitTimer.reset();
 		while (waitTimer.getTime() < 500) {
@@ -132,23 +136,61 @@ void f_doubleFire(void*) {
 			}
 		}
 		intake = 0;
-		launcher1 = 0;
-		launcher2 = 0;
+		rightLauncher = 0;
+		leftLauncher = 0;
 		doubleShooting = false;
 	}
 }
+
+
+
 void punch() {
-	launcher1 = 127;
-	launcher2 = 127;
+	rightLauncher = 127;
+	leftLauncher = 127;
 	pros::delay(500);
 	while (launchButton.get_value() != 1) {
 
 	}
-	launcher1 = 0;
-	launcher1.set_brake_mode(MOTOR_BRAKE_HOLD);
-	launcher2 = 0;
-	launcher2.set_brake_mode(MOTOR_BRAKE_HOLD);
+	rightLauncher = 0;
+	rightLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
+	leftLauncher = 0;
+	leftLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
 }
+
+void punchThen(int nextPosition) {
+	rightLauncher = 127;
+	leftLauncher = 127;
+	pros::delay(500);
+	set_tilter_position(nextPosition);
+	while (launchButton.get_value() != 1) {
+
+	}
+	rightLauncher = 0;
+	rightLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
+	leftLauncher = 0;
+	leftLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
+}
+
+void loadShooter() {
+	if (!launchButton.get_value()) {
+		shooter(127);
+	} else {
+		shooter(0);
+	}
+}
+
+void shooter(int speed) {
+	leftLauncher = speed;
+	rightLauncher = speed;
+	if (speed == 0) {
+		leftLauncher.move_velocity(0);
+		rightLauncher.move_velocity(0);
+		leftLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
+		rightLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
+	}
+}
+
+
 void calibrateTilter() {
   tilter.tare_position();
 }
@@ -157,7 +199,19 @@ void set_tilter_position(int position) {
   tilter.move_absolute(position, 200);
 }
 
+float getGyro() {
+	return (gyro1.get_value() + gyro2.get_value())/2.0f;
+}
+
+void resetGyro() {
+	gyro1.reset();
+	gyro2.reset();
+}
+
 void opcontrol() {
+	#ifdef DEBUG_INIT
+	competition_initialize();
+	#endif
 	controller = new pros::Controller(pros::E_CONTROLLER_MASTER);
 	calibrateTilter();
 	leftSide1.set_reversed(false);
@@ -172,8 +226,11 @@ void opcontrol() {
 	rightDrive.add_motor(&rightSide2);
 	rightDrive.set_reversed(true);
 
-	launcher1.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
-	launcher2.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
+	leftSide1.set_reversed(true);
+	rightSide1.set_reversed(true);
+
+	rightLauncher.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
+	leftLauncher.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
 	tilter.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
 
 	int inversed = 1;
@@ -197,6 +254,7 @@ void opcontrol() {
 		if (debugTimer.getTime() >= 1000) {
 			printf("Load Count: %d\n", getLoadCount());
 			printf("loadSonar value: %d\n", loadSonar.get_value());
+			printf("gyro value: %f\n", getGyro());
 			int loadSonarValue = (getLoadCount() * 7);
 			std::string loadBar = "";
 			for (int i = 0; i < 13; i++) {
@@ -206,7 +264,7 @@ void opcontrol() {
 			controller->print(1, 0, "%s", loadBar);
 			debugTimer.reset();
 		}
-		if (!tilterCalibrated && calibrationTimer.getTime() >= 500) {
+		if (!tilterCalibrated && calibrationTimer.getTime() >= 1000) {
 			tilterCalibrated = true;
 			calibrateTilter();
 			tiltMid();
@@ -238,7 +296,7 @@ void opcontrol() {
 		int intakeSpeed = (((int)controller->get_digital(INTAKE_UP_BUTTON)) - ((int)controller->get_digital(INTAKE_DOWN_BUTTON))) * 127;
 		//int armSpeed = (((int)controller->get_digital(ARM_UP_BUTTON)) - ((int)controller->get_digital(ARM_DOWN_BUTTON))) * 127;
 		//int tilterSpeed = ((int)controller->get_digital(DIGITAL_A) - (int)controller->get_digital(DIGITAL_Y)) * 40;
-		int launcherSpeed = ((int) (launchTimer.getTime() < 500 || !launchButton.get_value())) * 127;
+		int launcherSpeed = ((int) ((launchTimer.getTime() < 500 || !launchButton.get_value())) && !controller->get_digital(FIX_BUTTON)) * 127 - ((int)(controller->get_digital(FIX_BUTTON))*127);
 
 		//tilter = tilterSpeed;
 		if (!doubleShooting && tilterCalibrated) {
@@ -253,12 +311,7 @@ void opcontrol() {
 				doubleFire();
 			}
 
-			launcher1 = launcherSpeed;
-			launcher2 = launcherSpeed;
-			if (launcherSpeed == 0) {
-				launcher1.set_brake_mode(MOTOR_BRAKE_HOLD);
-				launcher2.set_brake_mode(MOTOR_BRAKE_HOLD);
-			}
+			shooter(launcherSpeed);
 			intake = intakeSpeed;
 		}
 

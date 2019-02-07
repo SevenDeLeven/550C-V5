@@ -30,8 +30,7 @@ extern "C" {
 #define LV_GROUP_KEY_NEXT 9   /*0x09, '\t'*/
 #define LV_GROUP_KEY_PREV 11  /*0x0B, '*/
 
-#define LV_GROUP_KEY_ENTER_LONG                                                \
-  14 /*0x0E, Sent by the library if ENTER is long pressed*/
+#define LV_GROUP_KEY_ENTER_LONG 14 /*0x0E, Sent by the library if ENTER is long pressed*/
 
 #if USE_LV_GROUP != 0
 /**********************

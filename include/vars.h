@@ -2,6 +2,9 @@
 #define VARS_H
 
 #include "pros/adi.hpp"
+#include "classes.hpp"
+
+#define CONFIG_FILE "/configfile.txt"
 
 #define SIDE_CAP 1
 #define SIDE_FLAG 2
@@ -9,16 +12,23 @@
 #define TEAM_RED 2
 #define AUTON_MATCH 1
 #define AUTON_SKILLS 2
+#define AUTON_TEST 3
 
-#define TILTER_MID_CLOSE 110
+#define TILTER_MID_CLOSE 200
 #define TILTER_TOP_CLOSE 1000
 
 #define TICKSPERTILE (720*(900.0/392.0))
-#define TICKSPERREVOLUTION (1470*(900.0/392.0))
+#define TICKSPERREVOLUTION_RIGHT (1445*(900.0/392.0))
+#define TICKSPERREVOLUTION_LEFT (1345*(900.0/392.0))
+#define TICKSPERREVOLUTION (1400*(900/392.0))
+
+// #define DEBUG_INIT
 
 namespace pros {
 class Motor;
 }
+
+extern sdl::AutonConfig autonConfig;
 
 extern int autonType;
 extern int autonTeam;
@@ -27,12 +37,14 @@ extern int autonSide;
 extern pros::Motor leftSide1;
 extern pros::Motor leftSide2;
 extern pros::Motor tilter;
-extern pros::Motor launcher1;
-extern pros::Motor launcher2;
+extern pros::Motor rightLauncher;
+extern pros::Motor leftLauncher;
 extern pros::Motor intake;
 extern pros::Motor rightSide1;
 extern pros::Motor rightSide2;
 
+extern pros::ADIGyro gyro1;
+extern pros::ADIGyro gyro2;
 extern pros::ADIUltrasonic loadSonar;
 extern pros::ADIPotentiometer tiltPotent;
 extern pros::ADIButton launchButton;
@@ -41,8 +53,15 @@ extern void calibrateTilter();
 extern void tiltMid();
 extern void tiltTop();
 extern void punch();
+extern void punchThen(int nextPosition);
 extern void set_tilter_position(int position);
+
+extern void loadShooter();
+extern void shooter(int speed);
 extern bool detectLoaded();
+extern bool readyToFire();
 extern int getLoadCount();
+extern float getGyro();
+extern void resetGyro();
 
 #endif

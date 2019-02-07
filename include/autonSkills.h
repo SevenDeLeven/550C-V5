@@ -1,105 +1,64 @@
-
 sdl::Timer tiltTimer;
+setFlipTurning(false);
 tilter = -100;
-launcher1 = 127;
-launcher2 = 127;
+shooter(127);
 while (!launchButton.get_value()) {
 
 }
-launcher1.move_velocity(0);
-launcher2.move_velocity(0);
-launcher1.set_brake_mode(MOTOR_BRAKE_HOLD);
-launcher2.set_brake_mode(MOTOR_BRAKE_HOLD);
+shooter(0);
 while (tiltTimer.getTime() < 500) {
 
 }
 calibrateTilter();
 tiltMid();
 intake = -127;
-go(2.15);
-go(-1.25);
-turnDegrees(-90);
-pros::delay(250);
-intake = 127;
-go(1.6);
-intake = -127;
-go(-1.35);
-turnDegrees(-90);
-go(1.0);
-goTime(0.5, 127);
-go(-0.4);
-turnDegrees(90);
-if (getLoadCount() == 1) {
-  turnDegrees(-5);
-  punch();
-} else if (getLoadCount() == 2) {
-  turnDegrees(-5);
-  punch();
-  tiltTop();
-  pros::delay(500);
-  punch();
-}
-tiltMid();
-turnDegrees(-6);
-go(1.5);
-goTime(0.7, 127);
-go(-1.1);
-turnDegrees(90);
+sdl::Event f_evtList[] = {sdl::Event(slowAfter, sdl::callback_point::DISTANCED, 1.2)};
+go(1.80, 127, f_evtList, 1);
+go(-1.80);
 goTime(0.5, -127);
-go(2.0);
-turnDegrees(-90);
-if (getLoadCount() > 0) {
-  go(-0.6);
-  turnDegrees(15);
-  if (getLoadCount() == 1) {
-    punch();
-  } if (getLoadCount() > 0) {
-    punch();
-    tiltTop();
-    pros::delay(500);
-    punch();
-    tiltMid();
-  }
-  turnDegrees(-15);
-  go(0.8);
+go(0.2);
+turnDegrees(-88);
+sdl::Timer timer;
+while (timer.getTime() < 300) {
+  loadShooter();
 }
-intake = -127;
-goTime(1.0, 127);
-go(-1.2);
-turnDegrees(80);
+shooter(0);
+pros::delay(100);
+punchThen(TILTER_TOP_CLOSE); //Position is actually next position after shooting
+if (getLoadCount() > 0) {
+  sdl::Timer timer;
+  while (!readyToFire()) {
+    loadShooter();
+  }
+  shooter(0);
+  pros::delay(100);
+  punchThen(TILTER_MID_CLOSE);  //Position is actually next position after shooting
+}
+turnDegrees(-2);
+go(1.8);
+goTime(0.5,127);
+go(-2);
+turnDegrees(45);
 intake = 127;
-go(2.5);
-intake = -127;
-go(-0.45);
-turnDegrees(-90);
-go(0.9);
-goTime(0.5, 127);
-go(-2.1);
-turnDegrees(-90);
-go(1.0);
-go(-1.0);
-pros::delay(1000);
-if (getLoadCount() > 0) {
-  turnDegrees(90);
-  go(0.1);
-  turnDegrees(10);
-  if (getLoadCount() == 1) {
+go(sqrt(2)*1.4, 100);
+go(-sqrt(2)*0.21);
+if (detectLoaded()) {
+  intake = -127;
+  punchThen(TILTER_TOP_CLOSE);
+  if (detectLoaded()) {
+    while (!readyToFire()) {
+      loadShooter();
+    }
+    shooter(0);
+    pros::delay(100);
     punch();
-  } if (getLoadCount() > 0) {
-    punch();
-    tiltTop();
-    pros::delay(500);
-    punch();
-    tiltMid();
   }
-  turnDegrees(-10);
-  go(-0.1);
-  turnDegrees(-90);
 }
+go(-sqrt(2)*(1.4-0.21));
 intake = 0;
+tiltMid();
+turnDegrees(-45);
 go(-1.0);
 turnDegrees(-90);
-go(1.2);
-turnDegrees(90);
-goTime(0.5, -127);
-go(5.2);
+goTime(0.5, 127);
+go(-4.6);
