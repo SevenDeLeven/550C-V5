@@ -4,7 +4,7 @@
 #include "sdlapi/event.hpp"
 #define THRESHOLD 54
 #define MINVEL 40
-#define MINVEL_TURNING 40
+#define MINVEL_TURNING 30
 
 
 bool flipTurningEnabled = false;
@@ -220,85 +220,95 @@ void goTime(double time, double vel) {
 
 
  void turnDegrees(double degrees, double maxVel) {
-  int TURN_THRESHOLD = 40;
+  while (degrees > 360) {
+    degrees -= 360;
+  }
+  while (degrees < -360) {
+    degrees += 360;
+  }
+  if (degrees > 180) {
+    degrees -= 360;
+  }
+  if (degrees < -180) {
+    degrees += 360;
+  }
+  int TURN_THRESHOLD = 20;
   int turnDirection = ((autonType == AUTON_MATCH && autonTeam == TEAM_BLUE) ? -1 : 1 ) * (flipTurningEnabled ? -1 : 1);
   degrees *= turnDirection;
   int tpr = turnDirection == 1 ? TICKSPERREVOLUTION_RIGHT : TICKSPERREVOLUTION_LEFT;
-  double distance = -(degrees/360.0)*tpr;
+  double distance = (abs(degrees)/360.0)*tpr;
   sdl::Timer timer;
   int direction = 1;
-  if (distance < 0) {
-  	direction *= -1;
-  	distance = abs(distance);
-  }
+  // if (distance < 0) {
+  // 	direction *= -1;
+  // 	distance = abs(distance);
+  // }
 
  	bool clearedTimer = false;
   leftDrive.reset_position();
   rightDrive.reset_position();
   resetGyro();
 
-  double gyroWeight = 1.0;  //CHANGE ENCODERWEIGHT
-  double encoderWeight = 0;
+  sdl::Timer printTimer;
  	while (true) {
 
  		std::int32_t leftSpeed = maxVel;
  		std::int32_t rightSpeed = maxVel;
 
-    //Distance setting
+    //Distance Setting
  		double leftDistance = abs(leftDrive.get_position());
  		double rightDistance = abs(rightDrive.get_position());
-    double gyroPosition = abs(getGyro())*TICKSPERREVOLUTION/3600.0;
-    leftDistance = (leftDistance * encoderWeight) + (gyroPosition * gyroWeight);    //Gyro/Encoder weighting
-    rightDistance = (rightDistance * encoderWeight) + (gyroPosition * gyroWeight);  //Gyro/Encoder weighting
- 		double leftDifference = distance-leftDistance;
- 		double rightDifference = distance-rightDistance;
+    double gyroDifference = getGyroDifference(degrees)*TICKSPERREVOLUTION/360.0;
 
-    //Curve correction
-    if (false && leftDistance != 0 && rightDistance != 0) {
-      //Cubic correction
+    //Curve Correction
+    if (leftDistance != 0 && rightDistance != 0) {
+      //Quartic Correction
       double leftFraction = rightDistance/leftDistance;
       leftFraction *= leftFraction*leftFraction*leftFraction;
       double rightFraction = leftDistance/rightDistance;
       rightFraction *= rightFraction*rightFraction*rightFraction;
 
-      leftSpeed *= leftFraction;
-      rightSpeed *= rightFraction;
+      leftSpeed *= abs(leftFraction);
+      rightSpeed *= abs(rightFraction);
     }
 
-    //Approach slowdown
-    leftSpeed *= (abs(leftDifference) < 200 ? abs(leftDifference/200.0) : 1);
-    rightSpeed *= (abs(rightDifference) < 200 ? abs(rightDifference/200.0) : 1);
+    //Target Approach Slowdown
+    leftSpeed *= (abs(gyroDifference) < 500 ? abs(gyroDifference)/500.0 : 1);
+    rightSpeed *= (abs(gyroDifference) < 500 ? abs(gyroDifference)/500.0 : 1);
 
-    //Direction correction
-    leftSpeed *= leftDifference < 0 ? -1 : 1;
-    rightSpeed *= rightDifference < 0 ? -1 : 1;
-
-    //Threshold checking
-    if (abs(leftDifference) > TURN_THRESHOLD) {
+    //Minimum Velocity Checking
+    if (abs(gyroDifference) > TURN_THRESHOLD) {
       leftSpeed = abs(leftSpeed) < MINVEL_TURNING ? (leftSpeed < 0 ? -MINVEL_TURNING : MINVEL_TURNING) : leftSpeed;
     }
-    if (abs(rightDifference) > TURN_THRESHOLD) {
+    if (abs(gyroDifference) > TURN_THRESHOLD) {
       rightSpeed = abs(rightSpeed) < MINVEL_TURNING ? (rightSpeed < 0 ? -MINVEL_TURNING : MINVEL_TURNING) : rightSpeed;
     }
 
+    //Direction Correction
+    leftSpeed *= gyroDifference < 0 ? -1 : 1;
+    rightSpeed *= gyroDifference < 0 ? -1 : 1;
+
+
+    //Finalize
  		leftDrive.move(leftSpeed*direction);
  		rightDrive.move(rightSpeed*direction*-1);
 
 
 
-    //Timeout
- 		if (clearedTimer && !((abs(leftDifference) <= TURN_THRESHOLD && abs(rightDifference) <= TURN_THRESHOLD))) {
+    //Target Reach Check w/ 500ms timer to ensure robot is in position
+ 		if (clearedTimer && !((abs(gyroDifference) <= TURN_THRESHOLD))) {
  			clearedTimer = false;
  		}
- 		if ((clearedTimer && timer.getTime() >= 500)) {
+ 		if (clearedTimer && timer.getTime() >= 500) {
  			leftDrive.move(0);
       rightDrive.move(0);
  			return;
  		}
- 		if ((abs(leftDifference) <= TURN_THRESHOLD && abs(rightDifference) <= TURN_THRESHOLD && !clearedTimer)) {
+ 		if (abs(gyroDifference) <= TURN_THRESHOLD && !clearedTimer) {
  			clearedTimer = true;
  			timer.reset();
  		}
+    pros::delay(1);
   }
 }
 

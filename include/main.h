@@ -87,6 +87,10 @@ void opcontrol(void);
 #include <string>
 #include <sstream>
 #include <fstream>
+#include "okapi/api.hpp"
+#include "sdlapi/gyro.hpp"
 #endif
+
+
 
 #endif  // _PROS_MAIN_H_

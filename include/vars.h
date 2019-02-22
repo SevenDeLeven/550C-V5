@@ -1,6 +1,7 @@
 #ifndef VARS_H
 #define VARS_H
 
+#include "pros/rtos.hpp"
 #include "pros/adi.hpp"
 #include "classes.hpp"
 
@@ -14,8 +15,8 @@
 #define AUTON_SKILLS 2
 #define AUTON_TEST 3
 
-#define TILTER_MID_CLOSE 200
-#define TILTER_TOP_CLOSE 1000
+#define TILTER_MID_CLOSE 100
+#define TILTER_TOP_CLOSE 500
 
 #define TICKSPERTILE (720*(900.0/392.0))
 #define TICKSPERREVOLUTION_RIGHT (1445*(900.0/392.0))
@@ -28,6 +29,10 @@ namespace pros {
 class Motor;
 }
 
+namespace sdl {
+class Gyro;
+}
+
 extern sdl::AutonConfig autonConfig;
 
 extern int autonType;
@@ -37,14 +42,14 @@ extern int autonSide;
 extern pros::Motor leftSide1;
 extern pros::Motor leftSide2;
 extern pros::Motor tilter;
-extern pros::Motor rightLauncher;
-extern pros::Motor leftLauncher;
+extern pros::Motor launcher;
 extern pros::Motor intake;
 extern pros::Motor rightSide1;
 extern pros::Motor rightSide2;
 
-extern pros::ADIGyro gyro1;
-extern pros::ADIGyro gyro2;
+extern pros::Task gyroTask;
+extern sdl::Gyro gyro1;
+extern sdl::Gyro gyro2;
 extern pros::ADIUltrasonic loadSonar;
 extern pros::ADIPotentiometer tiltPotent;
 extern pros::ADIButton launchButton;
@@ -62,6 +67,7 @@ extern bool detectLoaded();
 extern bool readyToFire();
 extern int getLoadCount();
 extern float getGyro();
+extern double getGyroDifference(double target);
 extern void resetGyro();
 
 #endif

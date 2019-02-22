@@ -63,8 +63,7 @@
 
 sdl::Timer tiltTimer;
 tilter = -100;
-rightLauncher = 127;
-leftLauncher = 127;
+shooter(0);
 setFlipTurning(true);
 while (!launchButton.get_value()) {
 

@@ -68,6 +68,7 @@ void f_doubleFire(void*) {
 		}
 		shooter(127);
 
+		//Launch ball (500ms)
 		waitTimer.reset();
 		while (waitTimer.getTime() < 500) {
 			if (!controller->get_digital(DOUBLEFIRE_BUTTON)) {
@@ -81,26 +82,21 @@ void f_doubleFire(void*) {
 		}
 
 		tiltTop();
+		//Load ball
 		while (!launchButton.get_value()) {
 			if (!controller->get_digital(DOUBLEFIRE_BUTTON)) {
 				shouldContinue = false;
 				break;
 			}
 		}
-		rightLauncher = 0;
-		leftLauncher = 0;
+		shooter(0);
 		if (!shouldContinue) {
 			doubleShooting = false;
 			continue;
 		}
 
 
-		if (totalLoad <= 1) {
-			doubleShooting = false;
-			continue;
-		}
-
-
+		//Wait until ready to fire
 		while (!readyToFire()) {
 			if (!controller->get_digital(DOUBLEFIRE_BUTTON)) {
 				shouldContinue = false;
@@ -112,7 +108,7 @@ void f_doubleFire(void*) {
 			continue;
 		}
 
-
+		//Delay for 100 ms
 		waitTimer.reset();
 		while (waitTimer.getTime() < 100) {
 			if (!controller->get_digital(DOUBLEFIRE_BUTTON)) {
@@ -125,8 +121,8 @@ void f_doubleFire(void*) {
 			continue;
 		}
 
-		rightLauncher = 127;
-		leftLauncher = 127;
+		//Launch (500ms)
+		shooter(127);
 
 		waitTimer.reset();
 		while (waitTimer.getTime() < 500) {
@@ -136,8 +132,7 @@ void f_doubleFire(void*) {
 			}
 		}
 		intake = 0;
-		rightLauncher = 0;
-		leftLauncher = 0;
+		shooter(0);
 		doubleShooting = false;
 	}
 }
@@ -145,30 +140,22 @@ void f_doubleFire(void*) {
 
 
 void punch() {
-	rightLauncher = 127;
-	leftLauncher = 127;
+	shooter(127);
 	pros::delay(500);
 	while (launchButton.get_value() != 1) {
 
 	}
-	rightLauncher = 0;
-	rightLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
-	leftLauncher = 0;
-	leftLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
+	shooter(0);
 }
 
 void punchThen(int nextPosition) {
-	rightLauncher = 127;
-	leftLauncher = 127;
+	shooter(127);
 	pros::delay(500);
 	set_tilter_position(nextPosition);
 	while (launchButton.get_value() != 1) {
 
 	}
-	rightLauncher = 0;
-	rightLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
-	leftLauncher = 0;
-	leftLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
+	shooter(0);
 }
 
 void loadShooter() {
@@ -180,13 +167,10 @@ void loadShooter() {
 }
 
 void shooter(int speed) {
-	leftLauncher = speed;
-	rightLauncher = speed;
+	launcher = speed;
 	if (speed == 0) {
-		leftLauncher.move_velocity(0);
-		rightLauncher.move_velocity(0);
-		leftLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
-		rightLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
+		launcher.move_velocity(0);
+		launcher.set_brake_mode(MOTOR_BRAKE_HOLD);
 	}
 }
 
@@ -200,7 +184,16 @@ void set_tilter_position(int position) {
 }
 
 float getGyro() {
-	return (gyro1.get_value() + gyro2.get_value())/2.0f;
+	double gyro1Val = gyro1.getValue();
+	double gyro2Val = gyro2.getValue();
+	return (gyro1Val + gyro2Val)/2.0f;
+}
+
+double getGyroDifference(double target) {
+	target *= 10;
+	double gyroVal = getGyro();
+	double gyroDifference = gyroVal-target;
+	return gyroDifference/10.0;
 }
 
 void resetGyro() {
@@ -229,8 +222,7 @@ void opcontrol() {
 	leftSide1.set_reversed(true);
 	rightSide1.set_reversed(true);
 
-	rightLauncher.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
-	leftLauncher.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
+	launcher.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
 	tilter.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
 
 	int inversed = 1;
@@ -246,10 +238,12 @@ void opcontrol() {
 
 	launchTimer.add(-1000);
 	pros::Task doubleFireTask(f_doubleFire);
+	int tilterCalibrationStage = 0;
 	bool tilterCalibrated = false;
 	sdl::Timer calibrationTimer;
 	tilter = -100;
 	controller->print(0,3,"550C-V5");
+	calibrationTimer.reset();
 	while (true) {
 		if (debugTimer.getTime() >= 1000) {
 			printf("Load Count: %d\n", getLoadCount());
@@ -264,7 +258,16 @@ void opcontrol() {
 			controller->print(1, 0, "%s", loadBar);
 			debugTimer.reset();
 		}
-		if (!tilterCalibrated && calibrationTimer.getTime() >= 1000) {
+		if (tilterCalibrationStage == 0 && calibrationTimer.getTime() >= 750) {
+			tilterCalibrationStage = 1;
+			tilter = -40;
+		}
+		if (tilterCalibrationStage == 1 && calibrationTimer.getTime() >= 900) {
+			tilterCalibrationStage = 2;
+			tilter = 0;
+		}
+		if (tilterCalibrationStage == 2 && calibrationTimer.getTime() >= 1000) {
+			tilterCalibrationStage = 3;
 			tilterCalibrated = true;
 			calibrateTilter();
 			tiltMid();

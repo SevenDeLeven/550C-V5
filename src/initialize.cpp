@@ -15,7 +15,7 @@ void initialize() {
 	leftSide1.set_reversed(true);
 	rightSide1.set_reversed(true);
 	intake.set_reversed(true);
-	rightLauncher.set_reversed(true);
+	launcher.set_reversed(true);
 	tilter.set_reversed(true);
 	tilter.set_encoder_units(MOTOR_ENCODER_COUNTS);
 }
@@ -69,6 +69,7 @@ DONE_SKILLS
 lv_obj_t * tabview = lv_tabview_create(lv_scr_act(), NULL);
 lv_obj_t * tabAuton = lv_tabview_add_tab(tabview, "Autonomous");
 lv_obj_t * tabSettings = lv_tabview_add_tab(tabview, "Settings");
+lv_obj_t * tabSensors = lv_tabview_add_tab(tabview, "Sensors");
 
 //AUTON SCREEN
 lv_obj_t * autonLeftButton = lv_btn_create(tabAuton, NULL);
@@ -92,6 +93,13 @@ lv_obj_t * settingsTurnOffsetRightButton = lv_btn_create(tabSettings, NULL);
 lv_obj_t * settingsTurnOffsetRightButton_text = lv_label_create(settingsTurnOffsetRightButton, NULL);
 lv_obj_t * settingsTurnOffsetLabel = lv_label_create(tabSettings, NULL);
 
+
+//SENSORS SCREEN
+lv_obj_t * sensorsGyroValue = lv_label_create(tabSensors, NULL);
+lv_obj_t * sensorsLeftDriveValue = lv_label_create(tabSensors, NULL);
+lv_obj_t * sensorsRightDriveValue = lv_label_create(tabSensors, NULL);
+lv_obj_t * sensorsResetButton = lv_btn_create(tabSensors, NULL);
+lv_obj_t * sensorsResetButton_text = lv_label_create(sensorsResetButton, NULL);
 
 
 std::string getAutonSideName(int as) {
@@ -148,8 +156,32 @@ void updateAutonomousState() {
 	}
 }
 
+//Called constantly while on sensors screen
+void updateSensorsState() {
+	std::string leftDriveValue;
+	std::string rightDriveValue;
+	std::string gyroValue;
+
+	std::stringstream formatterStream;
+	formatterStream.precision(10);
+	formatterStream << ((leftSide1.get_position()+leftSide2.get_position())/2);
+	formatterStream >> leftDriveValue;
+	formatterStream.clear();
+	formatterStream << ((rightSide1.get_position()+rightSide2.get_position())/(-2));
+	formatterStream >> rightDriveValue;
+	formatterStream.clear();
+	formatterStream << getGyro()/10.0;
+	formatterStream >> gyroValue;
+	formatterStream.flush();
+
+	lv_label_set_text(sensorsLeftDriveValue, ("LD: " + leftDriveValue).c_str());
+	lv_label_set_text(sensorsRightDriveValue, ("RD: " + rightDriveValue).c_str());
+	lv_label_set_text(sensorsGyroValue, ("Gyro: " + gyroValue).c_str());
+}
+
 //Called whenever a button is pressed
 void updateSettingsState() {
+	lv_label_set_text(sensorsResetButton_text, "Reset");
 	lv_label_set_text(settingsParkSwitchText, "Park");
 	lv_label_set_text(settingsTurnOffsetLeftButton_text, "<");
 	lv_label_set_text(settingsTurnOffsetRightButton_text, ">");
@@ -221,6 +253,9 @@ lv_res_t buttonPressed(lv_obj_t* obj) {
 	if (obj == settingsTurnOffsetRightButton) {
 		autonConfig.turnOffset+=0.5;
 	}
+	if (obj == sensorsResetButton) {
+		resetGyro();
+	}
 	updateAutonomousState();
 	updateSettingsState();
 }
@@ -240,6 +275,7 @@ void competition_initialize() {
 	lv_obj_set_size(settingsTurnOffsetLeftButton, 40, 40);
 	lv_obj_set_size(settingsTurnOffsetRightButton, 40, 40);
 	//settingsTurnnOffsetLabel
+	lv_obj_set_size(sensorsResetButton, 80, 40);
 
 	lv_obj_set_pos(autonLeftButton, (screenWidth/4) - (80/2), (screenHeight/2) - (20/2));
 	lv_obj_set_pos(autonRightButton, ((screenWidth*3)/4) - (80/2), (screenHeight/2) - (20/2));
@@ -252,6 +288,10 @@ void competition_initialize() {
 	lv_obj_set_pos(settingsTurnOffsetLeftButton, 4, 90);
 	lv_obj_set_pos(settingsTurnOffsetRightButton, screenWidth-4-60, 90);
 	lv_obj_set_pos(settingsTurnOffsetLabel, screenWidth/2, 90);
+	lv_obj_set_pos(sensorsLeftDriveValue, 10, 20);
+	lv_obj_set_pos(sensorsRightDriveValue, 10, 45);
+	lv_obj_set_pos(sensorsGyroValue, 10, 70);
+	lv_obj_set_pos(sensorsResetButton, (screenWidth/2)-(80/2), 110);
 
 	lv_btn_set_action(autonLeftButton, LV_BTN_ACTION_CLICK, buttonPressed);
 	lv_btn_set_action(autonRightButton, LV_BTN_ACTION_CLICK, buttonPressed);
@@ -260,12 +300,14 @@ void competition_initialize() {
 	lv_sw_set_action(settingsParkSwitch, buttonPressed);
 	lv_btn_set_action(settingsTurnOffsetLeftButton, LV_BTN_ACTION_CLICK, buttonPressed);
 	lv_btn_set_action(settingsTurnOffsetRightButton, LV_BTN_ACTION_CLICK, buttonPressed);
+	lv_btn_set_action(sensorsResetButton, LV_BTN_ACTION_CLICK, buttonPressed);
 
 	updateAutonomousState();
 	updateSettingsState();
 
 	while (true) {
 		lv_task_handler();
+		updateSensorsState();
 		pros::delay(10);
 	}
 }
