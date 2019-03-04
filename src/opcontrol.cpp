@@ -89,33 +89,7 @@ void f_doubleFire(void*) {
 				break;
 			}
 		}
-		shooter(0);
-		if (!shouldContinue) {
-			doubleShooting = false;
-			continue;
-		}
 
-
-		//Wait until ready to fire
-		while (!readyToFire()) {
-			if (!controller->get_digital(DOUBLEFIRE_BUTTON)) {
-				shouldContinue = false;
-				break;
-			}
-		}
-		if (!shouldContinue) {
-			doubleShooting = false;
-			continue;
-		}
-
-		//Delay for 100 ms
-		waitTimer.reset();
-		while (waitTimer.getTime() < 100) {
-			if (!controller->get_digital(DOUBLEFIRE_BUTTON)) {
-				shouldContinue = false;
-				break;
-			}
-		}
 		if (!shouldContinue) {
 			doubleShooting = false;
 			continue;
@@ -167,10 +141,13 @@ void loadShooter() {
 }
 
 void shooter(int speed) {
-	launcher = speed;
+	leftLauncher = speed;
+	rightLauncher = speed;
 	if (speed == 0) {
-		launcher.move_velocity(0);
-		launcher.set_brake_mode(MOTOR_BRAKE_HOLD);
+		leftLauncher.move_velocity(0);
+		leftLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
+		rightLauncher.move_velocity(0);
+		rightLauncher.set_brake_mode(MOTOR_BRAKE_HOLD);
 	}
 }
 
@@ -182,18 +159,20 @@ void calibrateTilter() {
 void set_tilter_position(int position) {
   tilter.move_absolute(position, 200);
 }
+float getAcc() {
+	return accelerometer.get_value();
+}
 
 float getGyro() {
 	double gyro1Val = gyro1.getValue();
 	double gyro2Val = gyro2.getValue();
-	return (gyro1Val + gyro2Val)/2.0f;
+	return (gyro1Val + gyro2Val)/20.0f;
 }
 
 double getGyroDifference(double target) {
-	target *= 10;
 	double gyroVal = getGyro();
 	double gyroDifference = gyroVal-target;
-	return gyroDifference/10.0;
+	return gyroDifference;
 }
 
 void resetGyro() {
@@ -222,7 +201,7 @@ void opcontrol() {
 	leftSide1.set_reversed(true);
 	rightSide1.set_reversed(true);
 
-	launcher.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
+	shooter(0);
 	tilter.set_brake_mode(pros::motor_brake_mode_e_t::E_MOTOR_BRAKE_HOLD);
 
 	int inversed = 1;

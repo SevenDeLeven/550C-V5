@@ -4,7 +4,7 @@
 #include "sdlapi/event.hpp"
 #define THRESHOLD 54
 #define MINVEL 40
-#define MINVEL_TURNING 30
+#define MINVEL_TURNING 23
 
 
 bool flipTurningEnabled = false;
@@ -18,9 +18,54 @@ void setFlipTurning(bool flipTurning) {
 sdl::motorgroup leftDrive;
 sdl::motorgroup rightDrive;
 
+void initShooter() {
+  sdl::Timer tiltTimer;
+  tilter = -100;
+  bool tilterCalibrated = false;
+  while (!launchButton.get_value() || tiltTimer.getTime() < 500) {
+    if (!tilterCalibrated && tiltTimer.getTime() >= 500) {
+      calibrateTilter();
+      tiltMid();
+    }
+    loadShooter();
+  }
+  if (!tilterCalibrated && tiltTimer.getTime() >= 500) {
+    calibrateTilter();
+    tiltMid();
+  }
+}
+
 void slowAfter(double &maxVel, double &leftTargetDistance, double &rightTargetDistance) {
-   maxVel = 90;
+   maxVel = maxVel/2;
  }
+
+ void invertIntake(double &maxVel, double &leftTargetDistance, double &rightTargetDistance) {
+   intake = -127;
+   leftTargetDistance = 2.0*TICKSPERTILE;
+   rightTargetDistance = 2.0*TICKSPERTILE;
+ }
+
+void goCheckpoint(double maxVel, double maxTime, double minTime) {
+  maxTime *= 1000;
+  maxVel = -maxVel;
+  sdl::Timer timer;
+  leftDrive.move(maxVel);
+  rightDrive.move(maxVel);
+  while (((abs(getAcc()-2028) < 70 || !((maxVel < 0 && getAcc()-2028 < 0) || (maxVel > 0 && getAcc()-2028 < 0))) && timer.getTime() < maxTime) || timer.getTime() < minTime) {
+
+  }
+  pros::delay(50);
+  leftDrive.move(0);
+  rightDrive.move(0);
+}
+
+void goCheckpoint(double maxVel, double maxTime) {
+  goCheckpoint(maxVel, maxTime, 0.2);
+}
+
+void goCheckpoint(double maxVel) {
+  goCheckpoint(maxVel, 0.8);
+}
 
 void go(double tiles, double maxVel, sdl::Event* events, int eventCount) {
    tiles = -tiles;
@@ -220,29 +265,19 @@ void goTime(double time, double vel) {
 
 
  void turnDegrees(double degrees, double maxVel) {
-  while (degrees > 360) {
+  while (degrees > 180) {
     degrees -= 360;
   }
-  while (degrees < -360) {
+  while (degrees < -180) {
     degrees += 360;
   }
-  if (degrees > 180) {
-    degrees -= 360;
-  }
-  if (degrees < -180) {
-    degrees += 360;
-  }
-  int TURN_THRESHOLD = 20;
+  double TURN_THRESHOLD = 0.48;
   int turnDirection = ((autonType == AUTON_MATCH && autonTeam == TEAM_BLUE) ? -1 : 1 ) * (flipTurningEnabled ? -1 : 1);
   degrees *= turnDirection;
   int tpr = turnDirection == 1 ? TICKSPERREVOLUTION_RIGHT : TICKSPERREVOLUTION_LEFT;
   double distance = (abs(degrees)/360.0)*tpr;
   sdl::Timer timer;
   int direction = 1;
-  // if (distance < 0) {
-  // 	direction *= -1;
-  // 	distance = abs(distance);
-  // }
 
  	bool clearedTimer = false;
   leftDrive.reset_position();
@@ -258,7 +293,7 @@ void goTime(double time, double vel) {
     //Distance Setting
  		double leftDistance = abs(leftDrive.get_position());
  		double rightDistance = abs(rightDrive.get_position());
-    double gyroDifference = getGyroDifference(degrees)*TICKSPERREVOLUTION/360.0;
+    double gyroDifference = getGyroDifference(degrees);
 
     //Curve Correction
     if (leftDistance != 0 && rightDistance != 0) {
@@ -273,8 +308,16 @@ void goTime(double time, double vel) {
     }
 
     //Target Approach Slowdown
-    leftSpeed *= (abs(gyroDifference) < 500 ? abs(gyroDifference)/500.0 : 1);
-    rightSpeed *= (abs(gyroDifference) < 500 ? abs(gyroDifference)/500.0 : 1);
+    leftSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
+    rightSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
+    if (abs(degrees) < 80) {
+      leftSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
+      rightSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
+    }
+    if (abs(degrees) < 35) {
+      leftSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
+      rightSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
+    }
 
     //Minimum Velocity Checking
     if (abs(gyroDifference) > TURN_THRESHOLD) {
@@ -296,10 +339,10 @@ void goTime(double time, double vel) {
 
 
     //Target Reach Check w/ 500ms timer to ensure robot is in position
- 		if (clearedTimer && !((abs(gyroDifference) <= TURN_THRESHOLD))) {
+ 		if (clearedTimer && abs(gyroDifference) > TURN_THRESHOLD) {
  			clearedTimer = false;
  		}
- 		if (clearedTimer && timer.getTime() >= 500) {
+ 		if (clearedTimer && timer.getTime() >= 200) {
  			leftDrive.move(0);
       rightDrive.move(0);
  			return;

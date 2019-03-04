@@ -15,7 +15,7 @@ void initialize() {
 	leftSide1.set_reversed(true);
 	rightSide1.set_reversed(true);
 	intake.set_reversed(true);
-	launcher.set_reversed(true);
+	rightLauncher.set_reversed(true);
 	tilter.set_reversed(true);
 	tilter.set_encoder_units(MOTOR_ENCODER_COUNTS);
 }
@@ -96,6 +96,7 @@ lv_obj_t * settingsTurnOffsetLabel = lv_label_create(tabSettings, NULL);
 
 //SENSORS SCREEN
 lv_obj_t * sensorsGyroValue = lv_label_create(tabSensors, NULL);
+lv_obj_t * sensorsAccValue = lv_label_create(tabSensors, NULL);
 lv_obj_t * sensorsLeftDriveValue = lv_label_create(tabSensors, NULL);
 lv_obj_t * sensorsRightDriveValue = lv_label_create(tabSensors, NULL);
 lv_obj_t * sensorsResetButton = lv_btn_create(tabSensors, NULL);
@@ -161,6 +162,7 @@ void updateSensorsState() {
 	std::string leftDriveValue;
 	std::string rightDriveValue;
 	std::string gyroValue;
+	std::string accValue;
 
 	std::stringstream formatterStream;
 	formatterStream.precision(10);
@@ -172,11 +174,15 @@ void updateSensorsState() {
 	formatterStream.clear();
 	formatterStream << getGyro()/10.0;
 	formatterStream >> gyroValue;
-	formatterStream.flush();
+	formatterStream.clear();
+	formatterStream << getAcc();
+	formatterStream >> accValue;
+	formatterStream.clear();
 
 	lv_label_set_text(sensorsLeftDriveValue, ("LD: " + leftDriveValue).c_str());
 	lv_label_set_text(sensorsRightDriveValue, ("RD: " + rightDriveValue).c_str());
 	lv_label_set_text(sensorsGyroValue, ("Gyro: " + gyroValue).c_str());
+	lv_label_set_text(sensorsAccValue, ("Acc: " + accValue).c_str());
 }
 
 //Called whenever a button is pressed
@@ -291,7 +297,8 @@ void competition_initialize() {
 	lv_obj_set_pos(sensorsLeftDriveValue, 10, 20);
 	lv_obj_set_pos(sensorsRightDriveValue, 10, 45);
 	lv_obj_set_pos(sensorsGyroValue, 10, 70);
-	lv_obj_set_pos(sensorsResetButton, (screenWidth/2)-(80/2), 110);
+	lv_obj_set_pos(sensorsAccValue, 10, 95);
+	lv_obj_set_pos(sensorsResetButton, (screenWidth/2)-(80/2), 135);
 
 	lv_btn_set_action(autonLeftButton, LV_BTN_ACTION_CLICK, buttonPressed);
 	lv_btn_set_action(autonRightButton, LV_BTN_ACTION_CLICK, buttonPressed);

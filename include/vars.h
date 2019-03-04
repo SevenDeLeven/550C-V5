@@ -42,12 +42,14 @@ extern int autonSide;
 extern pros::Motor leftSide1;
 extern pros::Motor leftSide2;
 extern pros::Motor tilter;
-extern pros::Motor launcher;
+extern pros::Motor leftLauncher;
+extern pros::Motor rightLauncher;
 extern pros::Motor intake;
 extern pros::Motor rightSide1;
 extern pros::Motor rightSide2;
 
 extern pros::Task gyroTask;
+extern pros::ADIAccelerometer accelerometer;
 extern sdl::Gyro gyro1;
 extern sdl::Gyro gyro2;
 extern pros::ADIUltrasonic loadSonar;
@@ -69,5 +71,6 @@ extern int getLoadCount();
 extern float getGyro();
 extern double getGyroDifference(double target);
 extern void resetGyro();
+extern float getAcc();
 
 #endif
