@@ -1,61 +1,39 @@
-sdl::Timer tiltTimer;
 setFlipTurning(true);
-tilter = -100;
-shooter(127);
-while (!launchButton.get_value()) {
 
-}
-shooter(0);
-while (tiltTimer.getTime() < 500) {
-
-}
-calibrateTilter();
-tiltMid();
 intake = -127;
-sdl::Event f_evtList[] = {sdl::Event(slowAfter, sdl::callback_point::DISTANCED, 1.2)};
-go(1.80, 127, f_evtList, 1);
-go(-1.80);
+tilter = -70;
+go(1.9);
+calibrateTilter();
+tiltTop();
+go(-1.9);
 goTime(0.5, -127);
 go(0.2);
-turnDegrees(90+(autonConfig.turnOffset));
-sdl::Timer timer;
-while (timer.getTime() < 300) {
-  loadShooter();
-}
-shooter(0);
+turnDegrees(89);
+go(0.25);
+punchThen(TILTER_MID_CLOSE); //Position is actually next position after shooting
 pros::delay(100);
-punchThen(TILTER_TOP_CLOSE); //Position is actually next position after shooting
-if (getLoadCount() > 0) {
-  while (!readyToFire()) {
-    loadShooter();
-  }
-  shooter(0);
-  pros::delay(100);
-  punchThen(TILTER_MID_CLOSE);  //Position is actually next position after shooting
-}
-turnDegrees(autonConfig.turnOffset);
-go(1.8);
-goTime(0.5,127);
-go(-2);
-turnDegrees(-45);
+punchThen(TILTER_TOP_CLOSE);
+go(0.4);
+turnDegrees(11);
+go(1.3);
+go(-1.55);
+turnDegrees(-61);
 intake = 127;
-go(sqrt(2)*1.4, 100);
-go(-sqrt(2)*0.21);
-if (detectLoaded()) {
-  intake = -127;
-  punchThen(TILTER_TOP_CLOSE);
-  if (detectLoaded()) {
-    while (!readyToFire()) {
-      loadShooter();
-    }
-    shooter(0);
-    pros::delay(100);
-    punch();
-  }
-}
+sdl::Event evt_arr[] = {sdl::Event(stopIntake, sdl::callback_point::DISTANCED, 1), sdl::Event(punchThenMid, sdl::callback_point::DISTANCED, 0.7)};
+go(1.3,60,evt_arr,2);
+go(-0.5);
+punchThen(TILTER_TOP_CLOSE);
 intake = 0;
-if (autonConfig.park) {
-  tiltMid();
-  turnDegrees(45);
-  go(-3.4);
-}
+
+// turnDegrees(-44);
+// sdl::Event evt_arr[] = {sdl::Event(changeTargetDistance, sdl::callback_point::DISTANCED, 0.64)};
+// go(0.7, 100, evt_arr, 2);
+// pros::delay(1500);
+// intake = 60;
+// go(1.0);
+// go(-0.4);
+// intake = -127;
+// turnDegrees(-3, 60);
+// punchThen(TILTER_TOP_CLOSE); //Position is actually next position after shooting
+// pros::delay(100);
+// punchThen(TILTER_MID_CLOSE);

@@ -166,10 +166,10 @@ void updateSensorsState() {
 
 	std::stringstream formatterStream;
 	formatterStream.precision(10);
-	formatterStream << ((leftSide1.get_position()+leftSide2.get_position())/2);
+	formatterStream << ((leftSide1.get_actual_velocity()+leftSide2.get_actual_velocity())/2);
 	formatterStream >> leftDriveValue;
 	formatterStream.clear();
-	formatterStream << ((rightSide1.get_position()+rightSide2.get_position())/(-2));
+	formatterStream << ((rightSide1.get_actual_velocity()+rightSide2.get_actual_velocity())/(-2));
 	formatterStream >> rightDriveValue;
 	formatterStream.clear();
 	formatterStream << getGyro()/10.0;

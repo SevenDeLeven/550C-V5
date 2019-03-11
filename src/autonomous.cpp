@@ -3,8 +3,8 @@
 #include "sdlapi/timer.hpp"
 #include "sdlapi/event.hpp"
 #define THRESHOLD 54
-#define MINVEL 40
-#define MINVEL_TURNING 23
+#define MINVEL 57
+#define MINVEL_TURNING 27
 
 
 bool flipTurningEnabled = false;
@@ -18,6 +18,7 @@ void setFlipTurning(bool flipTurning) {
 sdl::motorgroup leftDrive;
 sdl::motorgroup rightDrive;
 
+
 void initShooter() {
   sdl::Timer tiltTimer;
   tilter = -100;
@@ -29,21 +30,39 @@ void initShooter() {
     }
     loadShooter();
   }
+  shooter(0);
   if (!tilterCalibrated && tiltTimer.getTime() >= 500) {
     calibrateTilter();
     tiltMid();
   }
 }
 
+void initShooter(void*) {
+  initShooter();
+}
+
+void punchThenMid(double &maxVel, double &leftTargetDistance, double &rightTargetDistance) {
+  punchThen(TILTER_MID_CLOSE);
+}
+
 void slowAfter(double &maxVel, double &leftTargetDistance, double &rightTargetDistance) {
    maxVel = maxVel/2;
- }
+}
 
- void invertIntake(double &maxVel, double &leftTargetDistance, double &rightTargetDistance) {
-   intake = -127;
-   leftTargetDistance = 2.0*TICKSPERTILE;
-   rightTargetDistance = 2.0*TICKSPERTILE;
- }
+void stopIntake(double &maxVel, double &leftTargetDistance, double &rightTargetDistance) {
+  intake = 0;
+}
+
+void invertIntake(double &maxVel, double &leftTargetDistance, double &rightTargetDistance) {
+ intake = -127;
+ leftTargetDistance = 2.0*TICKSPERTILE;
+ rightTargetDistance = 2.0*TICKSPERTILE;
+}
+
+void changeTargetDistance(double &maxVel, double &leftTargetDistance, double &rightTargetDistance) {
+  leftTargetDistance = 0.4*TICKSPERTILE;
+  rightTargetDistance = 0.4*TICKSPERTILE;
+}
 
 void goCheckpoint(double maxVel, double maxTime, double minTime) {
   maxTime *= 1000;
@@ -81,7 +100,11 @@ void go(double tiles, double maxVel, sdl::Event* events, int eventCount) {
   leftDrive.reset_position();
   rightDrive.reset_position();
   sdl::Timer currentTimeTimer;
+
+  bool resetVelocityCorrectionTimer = false;
+  sdl::Timer velocityCorrectionTimer;
  	while (true) {
+    loadShooter();
     int currentTime = currentTimeTimer.getTime();
  		double leftDistance = abs(leftDrive.get_position());
  		double rightDistance = abs(rightDrive.get_position());
@@ -110,7 +133,7 @@ void go(double tiles, double maxVel, sdl::Event* events, int eventCount) {
  		if (clearedTimer && !((abs(leftDifference) <= THRESHOLD && abs(rightDifference) <= THRESHOLD))) {
  			clearedTimer = false;
  		}
- 		if ((clearedTimer && timer.getTime() >= 100)) {
+ 		if ((clearedTimer && timer.getTime() >= 200)) {
  			leftDrive.move(0);
        rightDrive.move(0);
  			return;
@@ -119,13 +142,37 @@ void go(double tiles, double maxVel, sdl::Event* events, int eventCount) {
  			clearedTimer = true;
  			timer.reset();
  		}
+
+    if (resetVelocityCorrectionTimer && (leftDrive.get_actual_velocity() >= 20 || rightDrive.get_actual_velocity() >= 20)) {
+      resetVelocityCorrectionTimer = false;
+    }
+    if (resetVelocityCorrectionTimer && leftDrive.get_actual_velocity() < 15 && rightDrive.get_actual_velocity() < 15 && velocityCorrectionTimer.getTime() > 500) {
+      leftDrive.move(0);
+      rightDrive.move(0);
+      return;
+    }
+    if (leftDrive.get_actual_velocity() < 15 && rightDrive.get_actual_velocity() < 15 && !resetVelocityCorrectionTimer) {
+      velocityCorrectionTimer.reset();
+      resetVelocityCorrectionTimer = true;
+    }
+    // if (velocityCorrectionTimer.getTime() > 100) {
+    //   velocityCorrectionTimer.reset();
+    //   if (abs(leftDrive.get_actual_velocity()) < 200 && abs(leftDifference) > THRESHOLD) {
+    //     leftVelocityCorrection += 1;
+    //   }
+    //   if (abs(rightDrive.get_actual_velocity()) < 200 && abs(rightDifference) > THRESHOLD) {
+    //     rightVelocityCorrection += 1;
+    //   }
+    //   leftVelocityCorrection = leftVelocityCorrection > 2 ? 2 : leftVelocityCorrection;
+    //   rightVelocityCorrection = rightVelocityCorrection > 2 ? 2 : rightVelocityCorrection;
+    // }
     for (int i = 0; i < eventCount; i++) {
       if (events[i].update(currentTime, (leftDistance+rightDistance)/2.0)) {
         events[i].call(maxVel, distance, distance);
       }
     }
  	}
- }
+}
 
 
 
@@ -264,14 +311,14 @@ void goTime(double time, double vel) {
 
 
 
- void turnDegrees(double degrees, double maxVel) {
+ void turnDegrees(double degrees, double maxVel, double decelMult) {
   while (degrees > 180) {
     degrees -= 360;
   }
   while (degrees < -180) {
     degrees += 360;
   }
-  double TURN_THRESHOLD = 0.48;
+  double TURN_THRESHOLD = 0.54;
   int turnDirection = ((autonType == AUTON_MATCH && autonTeam == TEAM_BLUE) ? -1 : 1 ) * (flipTurningEnabled ? -1 : 1);
   degrees *= turnDirection;
   int tpr = turnDirection == 1 ? TICKSPERREVOLUTION_RIGHT : TICKSPERREVOLUTION_LEFT;
@@ -308,22 +355,12 @@ void goTime(double time, double vel) {
     }
 
     //Target Approach Slowdown
-    leftSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
-    rightSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
-    if (abs(degrees) < 80) {
-      leftSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
-      rightSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
-    }
-    if (abs(degrees) < 35) {
-      leftSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
-      rightSpeed *= (abs(gyroDifference) < 45 ? abs(gyroDifference)/45.0 : 1);
-    }
+    leftSpeed *= (abs(gyroDifference) < 45*decelMult ? abs(gyroDifference)/(45.0*decelMult) : 1);
+    rightSpeed *= (abs(gyroDifference) < 45*decelMult ? abs(gyroDifference)/(45.0*decelMult) : 1);
 
     //Minimum Velocity Checking
     if (abs(gyroDifference) > TURN_THRESHOLD) {
       leftSpeed = abs(leftSpeed) < MINVEL_TURNING ? (leftSpeed < 0 ? -MINVEL_TURNING : MINVEL_TURNING) : leftSpeed;
-    }
-    if (abs(gyroDifference) > TURN_THRESHOLD) {
       rightSpeed = abs(rightSpeed) < MINVEL_TURNING ? (rightSpeed < 0 ? -MINVEL_TURNING : MINVEL_TURNING) : rightSpeed;
     }
 
@@ -338,11 +375,11 @@ void goTime(double time, double vel) {
 
 
 
-    //Target Reach Check w/ 500ms timer to ensure robot is in position
+    //Target Reach Check w/ 300ms timer to ensure robot is in position without momentum
  		if (clearedTimer && abs(gyroDifference) > TURN_THRESHOLD) {
  			clearedTimer = false;
  		}
- 		if (clearedTimer && timer.getTime() >= 200) {
+ 		if (clearedTimer && timer.getTime() >= 300) {
  			leftDrive.move(0);
       rightDrive.move(0);
  			return;
@@ -353,6 +390,10 @@ void goTime(double time, double vel) {
  		}
     pros::delay(1);
   }
+}
+
+void turnDegrees(double degrees, int maxVel) {
+  turnDegrees(degrees, maxVel, 1);
 }
 
 void turnDegrees(double degrees) {

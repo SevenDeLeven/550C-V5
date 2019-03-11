@@ -7,6 +7,7 @@ class Timer {
 private:
   int start;
 public:
+
   Timer();
   virtual ~Timer();
   void reset();
